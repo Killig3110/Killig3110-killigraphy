@@ -1,11 +1,11 @@
 import { useUserContext } from '@/context/AuthContext'
-import { formatDateString, multiFormatDateString } from '@/lib/utils'
-import { Models } from 'appwrite'
+import { multiFormatDateString } from '@/lib/utils'
 import { Link } from 'react-router-dom'
 import PostStats from './PostStats'
+import { Post } from '@/lib/api'
 
 type PostCardProps = {
-    post: Models.Document
+    post: Post
 }
 
 const PostCard = ({ post }: PostCardProps) => {
@@ -27,14 +27,14 @@ const PostCard = ({ post }: PostCardProps) => {
                         <p className='base-medium lg:body-bold text-light-1'>{post?.creator?.name || 'Anonymous'}</p>
 
                         <div className='flex-center gap-2 text-light-3'>
-                            <p className='subtle-semibold lg:small-regular'>{multiFormatDateString(post?.$createdAt)}</p>
+                            <p className='subtle-semibold lg:small-regular'>{multiFormatDateString(post?.createdAt)}</p>
                             -
                             <p className='subtle-semibold lg:small-regular'>{post?.location}</p>
                         </div>
                     </div>
                 </div>
-                <Link to={`/update-post/${post.$id}`}
-                    className={`${user?.id !== post?.creator.$id && 'hidden'}`}
+                <Link to={`/update-post/${post._id}`}
+                    className={`${user?._id !== post?.creator._id && 'hidden'}`}
                 >
                     <img
                         src='/assets/icons/edit.svg'
@@ -62,7 +62,7 @@ const PostCard = ({ post }: PostCardProps) => {
                 />
             </Link>
 
-            <PostStats post={post} userId={user?.id} />
+            <PostStats post={post} userId={user?._id} />
         </div>
     )
 }

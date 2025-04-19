@@ -21,4 +21,7 @@ export enum QUERY_KEYS {
 
     //  SEARCH KEYS
     SEARCH_POSTS = "getSearchPosts",
+
+    // SAVE POST KEYS
+    GET_SAVED_POSTS = "getSavedPosts",
 }

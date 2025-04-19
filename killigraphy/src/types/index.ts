@@ -1,3 +1,5 @@
+import { User } from "@/lib/api";
+
 export type INavLink = {
     imgURL: string;
     route: string;
@@ -48,10 +50,10 @@ export type INewUser = {
 };
 
 export type IContextType = {
-    user: IUser;
+    user: User;
     isLoading: boolean;
     isAuthenticated: boolean;
-    setUser: React.Dispatch<React.SetStateAction<IUser>>;
+    setUser: React.Dispatch<React.SetStateAction<User>>;
     setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
     checkAuthUser: () => Promise<boolean>;
 };

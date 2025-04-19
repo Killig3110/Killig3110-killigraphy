@@ -14,21 +14,19 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "../ui/textarea"
 import FileUpLoader from "../shared/FileUpLoader"
 import { PostValidation } from "@/lib/validation"
-import { Models } from "appwrite"
-import { useUserContext } from "@/context/AuthContext"
 import { useCreatePostMutation } from "@/lib/react-query/QueriesAndMutations"
 import { useToast } from "@/hooks/use-toast"
 import { useNavigate } from "react-router-dom"
+import { Post } from "@/lib/api"
 
 type PostFormProps = {
-    post?: Models.Document
+    post?: Post
 }
 
 const PostForm = ({ post }: PostFormProps) => {
-    const { mutateAsync: createPost, isPending: isLoadingCreate } = useCreatePostMutation()
-    const { user } = useUserContext()
-    const { toast } = useToast()
-    const navigate = useNavigate()
+    const { mutateAsync: createPost } = useCreatePostMutation();
+    const { toast } = useToast();
+    const navigate = useNavigate();
 
     const form = useForm<z.infer<typeof PostValidation>>({
         resolver: zodResolver(PostValidation),
@@ -44,8 +42,8 @@ const PostForm = ({ post }: PostFormProps) => {
     async function onSubmit(values: z.infer<typeof PostValidation>) {
         const newPost = await createPost({
             ...values,
-            userId: user.id,
-        })
+            image: values.file[0],
+        });
 
         if (!newPost) {
             toast({
@@ -53,6 +51,7 @@ const PostForm = ({ post }: PostFormProps) => {
                 description: "There was an error creating your post. Please try again.",
                 variant: "destructive",
             })
+            return;
         }
         navigate("/")
     }
@@ -83,7 +82,7 @@ const PostForm = ({ post }: PostFormProps) => {
                             <FormControl>
                                 <FileUpLoader
                                     feildChange={field.onChange}
-                                    mediaUrl={post?.imageUrl}
+                                    mediaUrl={post?.imageURL}
                                 />
                             </FormControl>
                             <FormMessage className="shad-form_message" />
@@ -120,7 +119,7 @@ const PostForm = ({ post }: PostFormProps) => {
                 />
 
                 <div className="flex gap-4 items-center justify-end">
-                    <Button type="button" className="shad-button_dark_4 h-10 w-28">
+                    <Button type="button" className="shad-button_dark_4 h-10 w-28" onClick={() => navigate('/')}>
                         Cancel
                     </Button>
                     <Button type="submit" className="shad-button_primary whitespace-nowrap h-12 w-28">

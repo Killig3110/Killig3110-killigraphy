@@ -1,40 +1,34 @@
-import { Models } from "appwrite";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-
 import { checkIsLiked } from "@/lib/utils";
 import {
-    useLikePost,
-    useSavePost,
-    useDeleteSavedPost,
-    useGetCurrentUser,
+    useToggleLikePostMutation,
+    useSavePostMutation,
+    useUnsavePostMutation,
+    useGetSavedPostsMutation,
 } from "@/lib/react-query/QueriesAndMutations";
+import { Post } from "@/lib/api";
 
 type PostStatsProps = {
-    post: Models.Document;
+    post: Post
     userId: string;
 };
 
 const PostStats = ({ post, userId }: PostStatsProps) => {
     const location = useLocation();
-    const likesList = post.likes.map((user: Models.Document) => user.$id);
 
-    const [likes, setLikes] = useState<string[]>(likesList);
+    const [likes, setLikes] = useState<string[]>(post.likes || []);
     const [isSaved, setIsSaved] = useState(false);
 
-    const { mutate: likePost } = useLikePost();
-    const { mutate: savePost } = useSavePost();
-    const { mutate: deleteSavePost } = useDeleteSavedPost();
-
-    const { data: currentUser } = useGetCurrentUser();
-
-    const savedPostRecord = currentUser?.save.find(
-        (record: Models.Document) => record.post.$id === post.$id
-    );
+    const { mutate: toggleLike } = useToggleLikePostMutation();
+    const { mutate: savePost } = useSavePostMutation();
+    const { mutate: unsavePost } = useUnsavePostMutation();
+    const { data: savedPosts } = useGetSavedPostsMutation();
 
     useEffect(() => {
-        setIsSaved(!!savedPostRecord);
-    }, [currentUser]);
+        const saved = savedPosts?.some((p) => p._id === post._id);
+        setIsSaved(!!saved);
+    }, [savedPosts, post._id]);
 
     const handleLikePost = (
         e: React.MouseEvent<HTMLImageElement, MouseEvent>
@@ -50,7 +44,7 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
         }
 
         setLikes(likesArray);
-        likePost({ postId: post.$id, likesArray });
+        toggleLike(post._id);
     };
 
     const handleSavePost = (
@@ -58,13 +52,13 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
     ) => {
         e.stopPropagation();
 
-        if (savedPostRecord) {
+        if (isSaved) {
             setIsSaved(false);
-            return deleteSavePost(savedPostRecord.$id);
+            unsavePost(post._id);
+        } else {
+            setIsSaved(true);
+            savePost(post._id);
         }
-
-        savePost({ userId: userId, postId: post.$id });
-        setIsSaved(true);
     };
 
     const containerStyles = location.pathname.startsWith("/profile")

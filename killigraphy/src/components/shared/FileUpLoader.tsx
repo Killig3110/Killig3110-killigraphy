@@ -10,7 +10,7 @@ type FileUploaderProps = {
 
 const FileUpLoader = ({ feildChange, mediaUrl }: FileUploaderProps) => {
     const [file, setFile] = useState<File[]>([])
-    const [fileUrl, setFileUrl] = useState('') // State to store the URL of the uploaded file.
+    const [fileUrl, setFileUrl] = useState(mediaUrl || ''); // State to store the URL of the uploaded file.
     // useState is a React hook that allows you to add state to functional components.
 
     // useDropzone is a hook that provides the functionality for drag-and-drop file uploads.
@@ -30,17 +30,20 @@ const FileUpLoader = ({ feildChange, mediaUrl }: FileUploaderProps) => {
             'image/*': ['.png', '.jpg', '.jpeg', '.svg'], // Accepts image files with the specified extensions.
         },
     })
+
+    const displayUrl = fileUrl || mediaUrl;
+
     return (
         <div {...getRootProps()} className="flex flex-center flex-col bg-dark-3 rounded-xl cursor-pointer">
             <input {...getInputProps()}
                 className='cursor-pointer'
             /> {
-                fileUrl ? (
+                displayUrl ? (
                     <>
                         <div className="flex flex-1 justify-center w-full p-5 lg:p-10">
                             <div className="relative max-h-[600px] overflow-auto rounded-xl">
                                 <img
-                                    src={fileUrl}
+                                    src={displayUrl}
                                     alt="uploaded-file"
                                     className="w-auto h-auto max-h-[600px] object-contain"
                                 />

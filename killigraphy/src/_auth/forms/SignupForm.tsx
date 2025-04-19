@@ -11,8 +11,7 @@ import Loader from "@/components/shared/Loader";
 import { SignupValidation } from "@/lib/validation";
 import { useUserContext } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { useCreateUserAccountMutation, useSignInAccountMutation } from "@/lib/react-query/QueriesAndMutations";
-import { getCurrentUser } from "@/lib/Appwrite/api";
+import { useCreateUserAccountMutation } from "@/lib/react-query/QueriesAndMutations";
 
 const SignupForm = () => {
     const { toast } = useToast();
@@ -31,45 +30,31 @@ const SignupForm = () => {
 
     // Queries
     const { mutateAsync: createUserAccount, isPending: isCreatingAccount } = useCreateUserAccountMutation();
-    const { mutateAsync: signInAccount, isPending: isSigningInUser } = useSignInAccountMutation();
 
     // Handler
     const handleSignup = async (user: z.infer<typeof SignupValidation>) => {
         try {
-            await createUserAccount(user)
-            const session = await signInAccount({
-                email: user.email,
-                password: user.password,
-            });
-
-            const newUser = await getCurrentUser();
-
-            if (!newUser) {
-                toast({ title: "Sign up failed. Please try again.", });
-
-                return;
-            }
-
-            if (!session) {
-                toast({ title: "Something went wrong. Please login your new account", });
-
-                navigate("/sign-in");
-
-                return;
-            }
+            await createUserAccount(user);
 
             const isLoggedIn = await checkAuthUser();
-
             if (isLoggedIn) {
                 form.reset();
-
                 navigate("/");
             } else {
-                toast({ title: "Login failed. Please try again.", });
+                toast({ title: "Login failed. Please try again." });
                 navigate("/sign-in");
             }
-        } catch (error) {
-            console.log({ error });
+        } catch (error: any) {
+            const message =
+                error?.response?.data?.message ||
+                error?.message ||
+                "Sign up failed. Please try again.";
+
+            toast({
+                title: "Sign up error",
+                description: message,
+                variant: "destructive",
+            });
         }
     };
 
@@ -145,7 +130,7 @@ const SignupForm = () => {
                     />
 
                     <Button type="submit" className="shad-button_primary">
-                        {isCreatingAccount || isSigningInUser || isUserLoading ? (
+                        {isCreatingAccount || isUserLoading ? (
                             <div className="flex-center gap-2">
                                 <Loader /> Loading...
                             </div>

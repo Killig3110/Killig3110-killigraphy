@@ -11,7 +11,6 @@ import Loader from "@/components/shared/Loader";
 import { SigninValidation } from "@/lib/validation";
 import { useUserContext } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { getCurrentUser } from "@/lib/Appwrite/api";
 import { useSignInAccountMutation } from "@/lib/react-query/QueriesAndMutations";
 
 function SigninForm() {
@@ -32,38 +31,18 @@ function SigninForm() {
         isPending: isSigningInUser,
     } = useSignInAccountMutation();
 
-    const handleSignup = async (user: z.infer<typeof SigninValidation>) => {
+    const handleSignin = async (user: z.infer<typeof SigninValidation>) => {
         try {
-            const session = await signInAccount({
+            await signInAccount({
                 email: user.email,
                 password: user.password,
             });
-
-            if (!session) {
-                toast({
-                    title: "Login failed",
-                    description: "No session created. Please try again.",
-                    variant: "destructive",
-                });
-                return;
-            }
-
-            const newUser = await getCurrentUser();
-
-            if (!newUser) {
-                toast({
-                    title: "Login failed",
-                    description: "Unable to fetch user after login.",
-                    variant: "destructive",
-                });
-                return;
-            }
 
             const isLoggedIn = await checkAuthUser();
 
             if (isLoggedIn) {
                 form.reset();
-                navigate("/");
+                navigate("/home");
             } else {
                 toast({
                     title: "Login failed",
@@ -74,7 +53,7 @@ function SigninForm() {
             }
         } catch (error: any) {
             const message =
-                error?.response?.message ||
+                error?.response?.data?.message ||
                 error?.message ||
                 "Error signing in. Please try again.";
 
@@ -99,7 +78,7 @@ function SigninForm() {
                 </p>
 
                 <form
-                    onSubmit={form.handleSubmit(handleSignup)}
+                    onSubmit={form.handleSubmit(handleSignin)}
                     className="flex flex-col gap-5 w-full mt-4"
                 >
                     <FormField
