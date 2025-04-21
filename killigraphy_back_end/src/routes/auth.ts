@@ -3,14 +3,10 @@ import { Response, Request } from 'express';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 import crypto from 'crypto';
-import User from '../module/Users';
+import User from '../models/Users';
 import { requireAuth } from '../middleware/requireAuth';
-import Posts from '../module/Posts';
-import multer from "multer";
-import { uploadToImageKit } from "../utils/uploadToImageKit";
-import fs from "fs";
-import mongoose from 'mongoose';
-import Saves from '../module/Saves';
+import { sendEmail } from '../utils/sendEmail';
+import redis from '../config/redis';
 
 const router = express.Router();
 
@@ -102,6 +98,31 @@ router.post('/logout', (req: Request, res: Response) => {
     });
 
     res.json({ message: 'Logged out successfully' });
+});
+
+// Request OTP
+router.post('/request-otp', async (req: Request, res: Response) => {
+    const { email } = req.body;
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await redis.set(`otp:${email}`, otp, 'EX', 300); // TTL 5 phút
+    await sendEmail(email, 'Your OTP Code', `Your code is: ${otp}`);
+
+    res.json({ message: 'OTP sent' });
+});
+
+// Verify OTP
+router.post('/verify-otp', async (req: Request, res: Response) => {
+    const { email, otp } = req.body;
+    const saved = await redis.get(`otp:${email}`);
+
+    if (!saved || saved !== otp) {
+        return res.status(401).json({ message: 'Invalid or expired OTP' });
+    }
+
+    await redis.del(`otp:${email}`);
+
+    return res.json({ verified: true });
 });
 
 export default router;

@@ -4,12 +4,12 @@ import { Button } from '../ui/button'
 // React-dropzone is a library for creating file upload components with drag-and-drop functionality.
 
 type FileUploaderProps = {
-    feildChange: (FILES: File[]) => void;
+    fieldChange: (files: File[]) => void;
     mediaUrl?: string;
 }
 
-const FileUpLoader = ({ feildChange, mediaUrl }: FileUploaderProps) => {
-    const [file, setFile] = useState<File[]>([])
+const FileUpLoader = ({ fieldChange, mediaUrl }: FileUploaderProps) => {
+    const [, setFile] = useState<File[]>([])
     const [fileUrl, setFileUrl] = useState(mediaUrl || ''); // State to store the URL of the uploaded file.
     // useState is a React hook that allows you to add state to functional components.
 
@@ -17,9 +17,9 @@ const FileUpLoader = ({ feildChange, mediaUrl }: FileUploaderProps) => {
     // It takes an object with options and a callback function to handle file drops.
     const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
         setFile(acceptedFiles) // Sets the accepted files to the state.
-        feildChange(acceptedFiles) // Calls the fieldChange function with the accepted files.
+        fieldChange(acceptedFiles) // Calls the fieldChange function with the accepted files.
         setFileUrl(URL.createObjectURL(acceptedFiles[0])) // Creates a URL for the first accepted file and sets it to the state.
-    }, [file]) // useCallback memoizes the function to prevent unnecessary re-renders.
+    }, [fieldChange]) // useCallback memoizes the function to prevent unnecessary re-renders.
     // The dependency array [file] ensures that the function is recreated only when the file state changes.
 
     const { getRootProps, // This function returns the props needed to create the dropzone area.

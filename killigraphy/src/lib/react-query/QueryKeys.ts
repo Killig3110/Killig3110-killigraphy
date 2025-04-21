@@ -24,4 +24,8 @@ export enum QUERY_KEYS {
 
     // SAVE POST KEYS
     GET_SAVED_POSTS = "getSavedPosts",
+
+    // COMMENT KEYS
+    GET_COMMENTS_BY_POST = "getCommentsByPost",
+
 }

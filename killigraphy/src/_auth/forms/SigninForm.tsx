@@ -18,11 +18,12 @@ function SigninForm() {
     const navigate = useNavigate();
     const { checkAuthUser, isLoading: isUserLoading } = useUserContext();
 
+
     const form = useForm<z.infer<typeof SigninValidation>>({
         resolver: zodResolver(SigninValidation),
         defaultValues: {
             email: "",
-            password: "",
+            password: ""
         },
     });
 
@@ -38,9 +39,9 @@ function SigninForm() {
                 password: user.password,
             });
 
-            const isLoggedIn = await checkAuthUser();
+            const isAuthenticated = await checkAuthUser();
 
-            if (isLoggedIn) {
+            if (isAuthenticated) {
                 form.reset();
                 navigate("/home");
             } else {
@@ -114,13 +115,7 @@ function SigninForm() {
                         className="shad-button_primary"
                         disabled={isSigningInUser || isUserLoading}
                     >
-                        {isSigningInUser || isUserLoading ? (
-                            <div className="flex-center gap-2">
-                                <Loader /> Signing in...
-                            </div>
-                        ) : (
-                            "Sign In"
-                        )}
+                        {isSigningInUser || isUserLoading ? <Loader /> : "Sign In"}
                     </Button>
 
                     <p className="text-small-regular text-light-2 text-center mt-2">

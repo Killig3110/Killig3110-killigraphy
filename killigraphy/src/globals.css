@@ -272,6 +272,10 @@
     @apply bg-primary-500 hover:bg-primary-500 text-light-1 flex gap-2 !important;
   }
 
+  .shad-button_primary_ghost {
+    @apply bg-gray-800 hover:bg-gray-700 text-white border border-white flex gap-2 !important;
+  }
+
   .shad-button_dark_4 {
     @apply h-12 bg-dark-4 px-5 text-light-1 flex gap-2 !important;
   }

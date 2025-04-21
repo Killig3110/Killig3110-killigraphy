@@ -19,13 +19,27 @@ import {
 import './globals.css';
 import RootLayout from './_root/RootLayout';
 import { Toaster } from './components/ui/toaster';
+import { useUserContext } from './context/AuthContext';
+import Loader from "@/components/shared/Loader";
 
 const App = () => {
+    const { isAuthenticated, isLoading } = useUserContext();
+
+    if (isLoading) return <div className="w-full h-full flex-center"><Loader /></div>;
     return (
         <main className="flex h-screen">
             <Routes>
                 {/* Redirect root to sign-in */}
-                <Route path="/" element={<Navigate to="/sign-in" />} />
+                <Route
+                    path="/"
+                    element={
+                        isAuthenticated ? (
+                            <Navigate to="/home" replace />
+                        ) : (
+                            <Navigate to="/sign-in" replace />
+                        )
+                    }
+                />
 
                 {/* Public routes */}
                 <Route element={<AuthLayout />}>
@@ -40,7 +54,7 @@ const App = () => {
                     <Route path="/saved" element={<Saved />} />
                     <Route path="/all-users" element={<AllUsers />} />
                     <Route path="/create-post" element={<CreatePost />} />
-                    <Route path="/update-post/:id" element={<EditPost />} />
+                    <Route path="/update-post/:postId" element={<EditPost />} />
                     <Route path="/posts/:id" element={<PostDetails />} />
                     <Route path="/profile/:id" element={<Profile />} />
                     <Route path="/update-profile/:id" element={<UpdateProfile />} />

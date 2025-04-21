@@ -3,6 +3,9 @@ import { multiFormatDateString } from '@/lib/utils'
 import { Link } from 'react-router-dom'
 import PostStats from './PostStats'
 import { Post } from '@/lib/api'
+import PostCommentsPreview from './PostCommentsPreview'
+import CommentInput from './CommentInput'
+import { useGetCommentsByPostMutation } from '@/lib/react-query/QueriesAndMutations'
 
 type PostCardProps = {
     post: Post
@@ -10,6 +13,7 @@ type PostCardProps = {
 
 const PostCard = ({ post }: PostCardProps) => {
     const { user } = useUserContext()
+    const { data: comments = [] } = useGetCommentsByPostMutation(post._id);
 
     return (
         <div className='post-card'>
@@ -63,6 +67,11 @@ const PostCard = ({ post }: PostCardProps) => {
             </Link>
 
             <PostStats post={post} userId={user?._id} />
+            <PostCommentsPreview postId={post._id} />
+
+            {comments.length <= 1 && (
+                <CommentInput postId={post._id} />
+            )}
         </div>
     )
 }

@@ -11,12 +11,18 @@ import Loader from "@/components/shared/Loader";
 import { SignupValidation } from "@/lib/validation";
 import { useUserContext } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { useCreateUserAccountMutation } from "@/lib/react-query/QueriesAndMutations";
+import { useCreateUserAccountMutation, useRequestOtpMutation, useVerifyOtpMutation } from "@/lib/react-query/QueriesAndMutations";
+import { useEffect, useState } from "react";
 
 const SignupForm = () => {
     const { toast } = useToast();
     const navigate = useNavigate();
     const { checkAuthUser, isLoading: isUserLoading } = useUserContext();
+
+    const [otp, setOtp] = useState('');
+    const [isOtpSent, setIsOtpSent] = useState(false);
+    const [isOtpVerified] = useState(false);
+    const [resendCountdown, setResendCountdown] = useState(0);
 
     const form = useForm<z.infer<typeof SignupValidation>>({
         resolver: zodResolver(SignupValidation),
@@ -30,16 +36,60 @@ const SignupForm = () => {
 
     // Queries
     const { mutateAsync: createUserAccount, isPending: isCreatingAccount } = useCreateUserAccountMutation();
+    const { mutateAsync: requestOtp, isPending: isSendingOtp } = useRequestOtpMutation();
+    const { mutateAsync: verifyOtp } = useVerifyOtpMutation();
+
+    const handleSendOtp = async () => {
+        const email = form.getValues("email");
+
+        if (!email) {
+            toast({ title: "Email & Password required", variant: "destructive" });
+            return;
+        }
+
+        try {
+            await requestOtp({ email });
+
+            toast({ title: "OTP sent", description: "Please check your email" });
+            setIsOtpSent(true);
+            setResendCountdown(30); // 30s cooldown
+        } catch (error: any) {
+            toast({
+                title: "Failed to send OTP",
+                description: error?.response?.data?.message || "Try again later",
+                variant: "destructive",
+            });
+        }
+    };
+
+    useEffect(() => {
+        if (resendCountdown <= 0) return;
+
+        const timer = setTimeout(() => {
+            setResendCountdown((prev) => prev - 1);
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [resendCountdown]);
 
     // Handler
     const handleSignup = async (user: z.infer<typeof SignupValidation>) => {
         try {
+            const email = form.getValues("email");
+
+            const res = await verifyOtp({ email, otp }) as { verified: boolean };
+
+            if (!res.verified) {
+                toast({ title: "Invalid OTP", variant: "destructive" });
+                return;
+            }
+
             await createUserAccount(user);
 
             const isLoggedIn = await checkAuthUser();
             if (isLoggedIn) {
                 form.reset();
-                navigate("/");
+                navigate("/home");
             } else {
                 toast({ title: "Login failed. Please try again." });
                 navigate("/sign-in");
@@ -129,15 +179,49 @@ const SignupForm = () => {
                         )}
                     />
 
-                    <Button type="submit" className="shad-button_primary">
-                        {isCreatingAccount || isUserLoading ? (
-                            <div className="flex-center gap-2">
-                                <Loader /> Loading...
-                            </div>
-                        ) : (
-                            "Sign Up"
-                        )}
-                    </Button>
+                    {/* OTP Input + Button */}
+                    {isOtpSent && (
+                        <div className="flex flex-row gap-2" >
+                            <Input
+                                placeholder="Enter 6-digit OTP"
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value)}
+                                maxLength={6}
+                                className="tracking-widest text-center"
+                                disabled={isOtpVerified}
+                            />
+
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                className={
+                                    `text-sm px-3 py-1 border rounded-md font-medium
+                                    ${resendCountdown > 0 ? "shad-button_primary_ghost" : "shad-button_primary"}
+                                    `}
+                                onClick={handleSendOtp}
+                                disabled={resendCountdown > 0}
+                            >
+                                {resendCountdown > 0 ? `Send Again (${resendCountdown})` : "Send Again"}
+                            </Button>
+
+
+                        </div>
+                    )}
+
+                    {/* Gửi mã OTP hoặc Đăng nhập */}
+                    {!isOtpSent ? (
+                        <Button type="button" className="shad-button_primary" onClick={() => handleSendOtp()} disabled={isSendingOtp || isCreatingAccount}>
+                            {isSendingOtp ? <Loader /> : "Send OTP"}
+                        </Button>
+                    ) : (
+                        <Button
+                            type="submit"
+                            className="shad-button_primary"
+                            disabled={isCreatingAccount || isUserLoading}
+                        >
+                            {isCreatingAccount || isUserLoading ? <Loader /> : "Verify OTP & Sign Up"}
+                        </Button>
+                    )}
 
                     <p className="text-small-regular text-light-2 text-center mt-2">
                         Already have an account?

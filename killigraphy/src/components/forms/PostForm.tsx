@@ -14,17 +14,20 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "../ui/textarea"
 import FileUpLoader from "../shared/FileUpLoader"
 import { PostValidation } from "@/lib/validation"
-import { useCreatePostMutation } from "@/lib/react-query/QueriesAndMutations"
+import { useCreatePostMutation, useUpdatePostMutation } from "@/lib/react-query/QueriesAndMutations"
 import { useToast } from "@/hooks/use-toast"
 import { useNavigate } from "react-router-dom"
 import { Post } from "@/lib/api"
 
 type PostFormProps = {
-    post?: Post
+    post?: Post;
+    action: "Create" | "Update";
 }
 
-const PostForm = ({ post }: PostFormProps) => {
+const PostForm = ({ post, action }: PostFormProps) => {
     const { mutateAsync: createPost } = useCreatePostMutation();
+    const { mutateAsync: updatePost } = useUpdatePostMutation();
+
     const { toast } = useToast();
     const navigate = useNavigate();
 
@@ -32,7 +35,7 @@ const PostForm = ({ post }: PostFormProps) => {
         resolver: zodResolver(PostValidation),
         defaultValues: {
             caption: post ? post?.caption : "",
-            file: [],
+            file: post && post.imageURL ? [new File([""], post.imageURL)] : [],
             location: post ? post?.location : "",
             tags: post ? post?.tags.join(',') : "",
         },
@@ -40,6 +43,26 @@ const PostForm = ({ post }: PostFormProps) => {
 
     // 2. Define a submit handler.
     async function onSubmit(values: z.infer<typeof PostValidation>) {
+        if (post && action === "Update") {
+            const isImageChanged = values.file[0] instanceof File;
+
+            const updatedPost = await updatePost(
+                {
+                    postId: post._id,
+                    post: {
+                        caption: values.caption,
+                        location: values.location,
+                        tags: values.tags,
+                        image: isImageChanged ? (values.file[0] as File) : undefined,
+                    },
+                }
+            );
+
+            if (!updatedPost) throw new Error("Update failed");
+            toast({ title: "Post updated successfully" });
+            return navigate(`/posts/${post._id}`);
+        }
+
         const newPost = await createPost({
             ...values,
             image: values.file[0],
@@ -53,7 +76,7 @@ const PostForm = ({ post }: PostFormProps) => {
             })
             return;
         }
-        navigate("/")
+        navigate("/home")
     }
 
     return (
@@ -81,7 +104,7 @@ const PostForm = ({ post }: PostFormProps) => {
                             <FormLabel className="shad-form_label">Add Photos</FormLabel>
                             <FormControl>
                                 <FileUpLoader
-                                    feildChange={field.onChange}
+                                    fieldChange={field.onChange}
                                     mediaUrl={post?.imageURL}
                                 />
                             </FormControl>

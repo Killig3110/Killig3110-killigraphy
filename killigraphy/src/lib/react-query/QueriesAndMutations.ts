@@ -15,6 +15,14 @@ import {
     savePost,
     unsavePost,
     getSavedPosts,
+    requestOtp,
+    verifyOtp,
+    createComment,
+    getCommentsByPost,
+    deleteComment,
+    getPostById,
+    deletePost,
+    updatePost,
 } from '../api';
 
 import { LoginPayload, RegisterPayload, PostPayload } from '../api';
@@ -38,6 +46,18 @@ export const useSignOutAccountMutation = () =>
         mutationFn: logoutUser,
     });
 
+export const useRequestOtpMutation = () => {
+    return useMutation({
+        mutationFn: ({ email }: { email: string }) => requestOtp({ email }),
+    });
+};
+
+export const useVerifyOtpMutation = () => {
+    return useMutation({
+        mutationFn: ({ email, otp }: { email: string; otp: string }) => verifyOtp({ email, otp }),
+    });
+};
+
 // =========================
 // CURRENT USER
 // =========================
@@ -55,9 +75,35 @@ export const useCreatePostMutation = () => {
 
     return useMutation({
         mutationFn: (post: PostPayload) => createPost(post),
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({
-                queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
+                queryKey: [QUERY_KEYS.GET_RECENT_POSTS, data?._id],
+            });
+        },
+    });
+};
+
+export const useUpdatePostMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ postId, post }: { postId: string; post: PostPayload }) => updatePost(postId, post),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.GET_RECENT_POSTS, data?._id],
+            });
+        },
+    });
+};
+
+export const useDeletePostMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (postId: string) => deletePost(postId),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.GET_RECENT_POSTS, data?._id],
             });
         },
     });
@@ -74,13 +120,20 @@ export const useToggleLikePostMutation = () => {
 
     return useMutation({
         mutationFn: (postId: string) => toggleLikePost(postId),
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({
-                queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
+                queryKey: [QUERY_KEYS.GET_RECENT_POSTS, data?._id],
             });
         },
     });
 };
+
+export const useGetPostByIdMutation = (postId: string) =>
+    useQuery({
+        queryKey: [QUERY_KEYS.GET_POST_BY_ID, postId],
+        queryFn: () => getPostById(postId),
+        enabled: !!postId,
+    });
 
 // =========================
 // SAVED POSTS
@@ -90,12 +143,12 @@ export const useSavePostMutation = () => {
 
     return useMutation({
         mutationFn: (postId: string) => savePost(postId),
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({
-                queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
+                queryKey: [QUERY_KEYS.GET_RECENT_POSTS, data?._id],
             });
             queryClient.invalidateQueries({
-                queryKey: [QUERY_KEYS.GET_SAVED_POSTS],
+                queryKey: [QUERY_KEYS.GET_SAVED_POSTS, data?._id],
             });
         },
     });
@@ -106,12 +159,12 @@ export const useUnsavePostMutation = () => {
 
     return useMutation({
         mutationFn: (postId: string) => unsavePost(postId),
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({
-                queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
+                queryKey: [QUERY_KEYS.GET_RECENT_POSTS, data?._id],
             });
             queryClient.invalidateQueries({
-                queryKey: [QUERY_KEYS.GET_SAVED_POSTS],
+                queryKey: [QUERY_KEYS.GET_SAVED_POSTS, data?._id],
             });
         },
     });
@@ -121,4 +174,49 @@ export const useGetSavedPostsMutation = () =>
     useQuery({
         queryKey: [QUERY_KEYS.GET_SAVED_POSTS],
         queryFn: getSavedPosts,
+    });
+
+// =========================
+// COMMENTS
+// =========================
+
+export const useCreateCommentMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({
+            content,
+            postId,
+            parentId,
+        }: {
+            content: string;
+            postId: string;
+            parentId?: string;
+        }) => createComment({ content, postId, parentId }),
+
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.GET_COMMENTS_BY_POST, variables.postId],
+            });
+        },
+    });
+};
+
+export const useDeleteCommentMutation = (postId: string) => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (commentId: string) => deleteComment(commentId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.GET_COMMENTS_BY_POST, postId],
+            });
+        },
+    });
+};
+
+export const useGetCommentsByPostMutation = (postId: string) =>
+    useQuery({
+        queryKey: [QUERY_KEYS.GET_COMMENTS_BY_POST, postId],
+        queryFn: () => getCommentsByPost(postId),
     });

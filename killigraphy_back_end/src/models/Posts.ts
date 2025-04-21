@@ -11,7 +11,6 @@ const postSchema = new mongoose.Schema({
     location: { type: String },
 
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    save: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 }, {
     timestamps: true
 });

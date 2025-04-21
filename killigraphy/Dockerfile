@@ -1,30 +1,19 @@
-# Build stage
-FROM node:20-alpine as build
-
+# Base stage
+FROM node:20-alpine AS base
 WORKDIR /app
 
-# Copy package files and install dependencies
-COPY package.json package-lock.json* ./
+# Cài deps trước
+COPY package*.json ./
 RUN npm ci
 
-# Copy all project files
+# Copy source và build
 COPY . .
-
-# Build the application
 RUN npm run build
 
-# Production stage
-FROM nginx:alpine as production
-
-# Copy built assets from the build stage
-COPY --from=build /app/dist /usr/share/nginx/html
+# Nginx stage
+FROM nginx:alpine AS production
+COPY --from=base /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy nginx configuration if needed
-# COPY ./nginx.conf /etc/nginx/conf.d/default.conf
-
-# Expose port 80
 EXPOSE 80
-
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]

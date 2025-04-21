@@ -25,7 +25,7 @@ const INITIAL_STATE: IContextType = {
     isAuthenticated: false,
     setUser: () => { },
     setIsAuthenticated: () => { },
-    checkAuthUser: async () => false,
+    checkAuthUser: async () => false as boolean,
 };
 
 const AuthContext = createContext<IContextType>(INITIAL_STATE);
@@ -39,13 +39,8 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
             setIsLoading(true);
 
-            const hasToken = document.cookie.split('; ').some((cookie) =>
-                cookie.startsWith('token='),
-            );
-
-            if (!hasToken) return false;
-
             const currentUser = await getCurrentUser();
+
             if (currentUser) {
                 setUser(currentUser);
                 setIsAuthenticated(true);
