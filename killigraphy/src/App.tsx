@@ -25,7 +25,12 @@ import Loader from "@/components/shared/Loader";
 const App = () => {
     const { isAuthenticated, isLoading } = useUserContext();
 
-    if (isLoading) return <div className="w-full h-full flex-center"><Loader /></div>;
+    if (isLoading) return (
+        <div className="w-full h-full flex-center">
+            <Loader />
+            <p className="text-light-4 mt-2">Loading...</p>
+        </div >
+    );
     return (
         <main className="flex h-screen">
             <Routes>
@@ -55,7 +60,7 @@ const App = () => {
                     <Route path="/all-users" element={<AllUsers />} />
                     <Route path="/create-post" element={<CreatePost />} />
                     <Route path="/update-post/:postId" element={<EditPost />} />
-                    <Route path="/posts/:id" element={<PostDetails />} />
+                    <Route path="/posts/:postId" element={<PostDetails />} />
                     <Route path="/profile/:id" element={<Profile />} />
                     <Route path="/update-profile/:id" element={<UpdateProfile />} />
                 </Route>

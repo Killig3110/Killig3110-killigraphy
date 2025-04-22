@@ -25,8 +25,8 @@ type PostFormProps = {
 }
 
 const PostForm = ({ post, action }: PostFormProps) => {
-    const { mutateAsync: createPost } = useCreatePostMutation();
-    const { mutateAsync: updatePost } = useUpdatePostMutation();
+    const { mutateAsync: createPost, isPending: isLoadingCreate } = useCreatePostMutation();
+    const { mutateAsync: updatePost, isPending: isLoadingUpdate } = useUpdatePostMutation();
 
     const { toast } = useToast();
     const navigate = useNavigate();
@@ -145,8 +145,10 @@ const PostForm = ({ post, action }: PostFormProps) => {
                     <Button type="button" className="shad-button_dark_4 h-10 w-28" onClick={() => navigate('/')}>
                         Cancel
                     </Button>
-                    <Button type="submit" className="shad-button_primary whitespace-nowrap h-12 w-28">
-                        Submit
+                    <Button type="submit" className="shad-button_primary whitespace-nowrap h-12 w-28"
+                        disabled={isLoadingCreate || isLoadingUpdate}
+                    >
+                        {isLoadingCreate || isLoadingUpdate ? "Loading..." : action === "Create" ? "Create Post" : "Update Post"}
                     </Button>
                 </div>
             </form>

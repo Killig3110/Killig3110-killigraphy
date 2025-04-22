@@ -89,7 +89,7 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
 
                 <div className="flex gap-2 items-center">
                     <img
-                        src="/assets/icons/comment.png"
+                        src="/assets/icons/chat.svg"
                         alt="comment"
                         width={20}
                         height={20}

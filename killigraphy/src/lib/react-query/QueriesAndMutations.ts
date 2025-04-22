@@ -2,6 +2,7 @@ import {
     useQuery,
     useMutation,
     useQueryClient,
+    useInfiniteQuery,
 } from '@tanstack/react-query';
 
 import {
@@ -23,6 +24,12 @@ import {
     getPostById,
     deletePost,
     updatePost,
+    getUserPosts,
+    fetchPaginatedPosts,
+    Post,
+    PostSearchParams,
+    searchPosts,
+    fetchPostMeta,
 } from '../api';
 
 import { LoginPayload, RegisterPayload, PostPayload } from '../api';
@@ -135,6 +142,13 @@ export const useGetPostByIdMutation = (postId: string) =>
         enabled: !!postId,
     });
 
+export const useGetUserPostsMutation = (userId: string) =>
+    useQuery({
+        queryKey: [QUERY_KEYS.GET_USER_POSTS, userId],
+        queryFn: () => getUserPosts(userId),
+        enabled: !!userId,
+    });
+
 // =========================
 // SAVED POSTS
 // =========================
@@ -173,7 +187,34 @@ export const useUnsavePostMutation = () => {
 export const useGetSavedPostsMutation = () =>
     useQuery({
         queryKey: [QUERY_KEYS.GET_SAVED_POSTS],
-        queryFn: getSavedPosts,
+        queryFn: () => getSavedPosts(),
+    });
+
+export const useInfinitePostsMutation = () => {
+    return useInfiniteQuery<Post[], Error>({
+        queryKey: [QUERY_KEYS.GET_POSTS],
+        queryFn: async ({ pageParam = 1 }) => {
+            return await fetchPaginatedPosts(pageParam as number);
+        },
+        initialPageParam: 1,
+        getNextPageParam: (lastPage, allPages) => {
+            return lastPage.length < 10 ? undefined : allPages.length + 1;
+        },
+    });
+};
+
+export const useSearchPostsMutation = (params: PostSearchParams) =>
+    useQuery({
+        queryKey: [QUERY_KEYS.SEARCH_POSTS, params],
+        queryFn: () => searchPosts(params),
+        enabled: !!params.query || !!params.tags?.length,
+    });
+
+export const usePostMetaMutation = () =>
+    useQuery({
+        queryKey: [QUERY_KEYS.GET_POST_META],
+        queryFn: fetchPostMeta,
+        staleTime: 1000 * 60 * 5, // 5 minutes
     });
 
 // =========================

@@ -92,14 +92,6 @@ const PostComments = ({ postId, postCreatorId }: PostCommentsProps) => {
     return (
         <div className="mt-6">
             <h4 className="text-light-1 font-semibold mb-2">Comments</h4>
-
-            <CommentInput
-                postId={postId}
-                parentId={replyTo?.id}
-                defaultValue={replyTo ? `@${replyTo.name} ` : ""}
-                inputRef={inputRef as React.RefObject<HTMLInputElement>}
-            />
-
             {isPending ? (
                 <Loader />
             ) : (
@@ -112,6 +104,15 @@ const PostComments = ({ postId, postCreatorId }: PostCommentsProps) => {
                     ))}
                 </div>
             )}
+
+            <div className="mt-4">
+                <CommentInput
+                    postId={postId}
+                    parentId={replyTo?.id}
+                    defaultValue={replyTo ? `@${replyTo.name} ` : ""}
+                    inputRef={inputRef as React.RefObject<HTMLInputElement>}
+                />
+            </div>
         </div>
     );
 };

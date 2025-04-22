@@ -7,6 +7,7 @@ import { uploadToImageKit } from "../utils/uploadToImageKit";
 import fs from "fs";
 import mongoose from 'mongoose';
 import imagekit from '../config/imagekit';
+import redis from '../config/redis';
 
 const router = express.Router();
 
@@ -100,13 +101,69 @@ router.delete('/:id', requireAuth, async (req: AuthenticatedRequest, res: Respon
     res.json({ message: 'Post deleted successfully' });
 });
 
-// Get posts
-router.get('/', async (req: Request, res: Response) => {
-    const posts = await Posts.find()
-        .sort({ createdAt: -1 })
-        .limit(20)
-        .populate('creator');
-    res.json(posts);
+router.get("/meta/trend", async (req, res) => {
+    try {
+        const cached = await redis.get("post:meta");
+        if (cached) {
+            return res.json(JSON.parse(cached));
+        }
+
+        const posts = await Posts.find({}, "tags location -_id");
+        const tagSet = new Set<string>();
+        const locationSet = new Set<string>();
+
+        posts.forEach((post) => {
+            post.tags.forEach((tag) => tagSet.add(tag));
+            if (post.location) locationSet.add(post.location);
+        });
+
+        const data = {
+            tags: Array.from(tagSet),
+            locations: Array.from(locationSet),
+        };
+
+        await redis.setex("post:meta", 300, JSON.stringify(data));
+
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch meta", error: err });
+    }
+});
+
+router.get('/search', async (req: Request, res: Response) => {
+    try {
+        const { query, tags, location, sort } = req.query;
+
+        const searchFilter: any = {};
+
+        if (query) {
+            searchFilter.caption = { $regex: query, $options: 'i' };
+        }
+
+        if (tags) {
+            const tagsArray = (tags as string).split(',').map(tag => tag.trim());
+            searchFilter.tags = { $in: tagsArray };
+        }
+
+        if (location) {
+            searchFilter.location = { $regex: location, $options: 'i' };
+        }
+
+        let sortOption: { [key: string]: mongoose.SortOrder } = { createdAt: -1 }; // default sort
+
+        if (sort === "popular") {
+            sortOption = { likes: -1 }
+        }
+
+        const posts = await Posts.find(searchFilter)
+            .sort(sortOption)
+            .populate("creator");
+
+        res.json(posts);
+    } catch (err) {
+        console.error("Search posts error:", err);
+        res.status(500).json({ message: "Internal server error" });
+    }
 });
 
 // Get post by ID
@@ -140,6 +197,19 @@ router.patch('/:id/like', requireAuth, async (req: AuthenticatedRequest, res: Re
 
     await post.save();
     res.json(post);
+});
+
+// Get posts with pagination
+router.get('/', async (req: AuthenticatedRequest, res: Response) => {
+    const { page = 1, limit = 10 } = req.query;
+
+    const posts = await Posts.find()
+        .skip((Number(page) - 1) * Number(limit))
+        .limit(Number(limit))
+        .sort({ createdAt: -1 })
+        .populate('creator');
+
+    res.json(posts);
 });
 
 export default router;

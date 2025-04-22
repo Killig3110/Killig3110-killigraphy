@@ -129,6 +129,36 @@ export const getRecentPosts = async (): Promise<Post[]> => {
     return res.data;
 };
 
+export interface PostSearchParams {
+    query?: string;
+    tags?: string[];
+    location?: string;
+    sort?: "latest" | "popular"; // thêm "trending" nếu muốn
+}
+
+export interface PostMeta {
+    tags: string[];
+    locations: string[];
+}
+
+export const searchPosts = async (params: PostSearchParams): Promise<Post[]> => {
+    const queryParams = new URLSearchParams();
+
+    if (params.query) queryParams.append("query", params.query);
+    if (params.tags && params.tags.length > 0)
+        queryParams.append("tags", params.tags.join(","));
+    if (params.location) queryParams.append("locations", params.location);
+    if (params.sort) queryParams.append("sort", params.sort);
+
+    const res = await API.get<Post[]>(`/posts/search?${queryParams.toString()}`);
+    return res.data;
+};
+
+export const fetchPostMeta = async (): Promise<PostMeta> => {
+    const res = await API.get<PostMeta>("/posts/meta/trend");
+    return res.data; // { tags: [...], locations: [...] }
+};
+
 export const getPostById = async (postId: string): Promise<Post> => {
     const res = await API.get(`/posts/${postId}`);
     return res.data as Post;
@@ -136,6 +166,11 @@ export const getPostById = async (postId: string): Promise<Post> => {
 
 export const getUserPosts = async (userId: string): Promise<Post[]> => {
     const res = await API.get<Post[]>(`/posts/user/${userId}`);
+    return res.data;
+};
+
+export const fetchPaginatedPosts = async (page = 1): Promise<Post[]> => {
+    const res = await API.get<Post[]>(`/posts?page=${page}&limit=10`);
     return res.data;
 };
 
@@ -155,7 +190,7 @@ export const unsavePost = async (postId: string): Promise<any> => {
 };
 
 export const getSavedPosts = async (): Promise<Post[]> => {
-    const res = await API.get<Post[]>("/saves");
+    const res = await API.get<Post[]>(`/saves`);
     return res.data;
 };
 
