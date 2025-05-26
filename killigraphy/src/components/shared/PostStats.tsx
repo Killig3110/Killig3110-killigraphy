@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { checkIsLiked } from "@/lib/utils";
 import {
     useToggleLikePostMutation,
@@ -17,6 +17,7 @@ type PostStatsProps = {
 
 const PostStats = ({ post, userId }: PostStatsProps) => {
     const location = useLocation();
+    const navigate = useNavigate();
 
     const [likes, setLikes] = useState<string[]>(post.likes || []);
     const [isSaved, setIsSaved] = useState(false);
@@ -93,6 +94,8 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
                         alt="comment"
                         width={20}
                         height={20}
+                        onClick={() => navigate(`/posts/${post._id}`)}
+                        className="cursor-pointer"
                     />
                     <p className="small-medium lg:base-medium">{comments.length}</p>
                 </div>

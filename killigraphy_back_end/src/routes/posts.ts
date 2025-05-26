@@ -8,6 +8,7 @@ import fs from "fs";
 import mongoose from 'mongoose';
 import imagekit from '../config/imagekit';
 import redis from '../config/redis';
+import Users from '../models/Users';
 
 const router = express.Router();
 
@@ -82,6 +83,23 @@ router.patch('/:id', requireAuth, upload.single('image'), async (req: Authentica
 
     await post.save();
     res.json(post);
+});
+
+// Get posts by user ID
+router.get('/user/:userId', async (req: Request, res: Response) => {
+    try {
+        const { userId } = req.params;
+        const posts = await Posts.find({ creator: userId })
+            .populate('creator')
+            .sort({ createdAt: -1 });
+
+        if (!posts.length) return res.status(404).json({ message: 'No posts found' });
+
+        res.json(posts);
+    } catch (err) {
+        console.error("Get user posts error:", err);
+        res.status(500).json({ message: "Internal server error" });
+    }
 });
 
 // Delete post
@@ -168,16 +186,34 @@ router.get('/search', async (req: Request, res: Response) => {
 
 // Get post by ID
 router.get('/:id', async (req: Request, res: Response) => {
-    const post = await Posts.findById(req.params.id).populate('creator');
-    if (!post) return res.status(404).json({ message: 'Post not found' });
-    res.json(post);
+    try {
+        const post = await Posts.findById(req.params.id).populate('creator');
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+
+        res.json(post);
+    }
+    catch (err) {
+        console.error("Get post error:", err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
 });
 
-// Get post by User ID
-router.get('/user/:userId', async (req: Request, res: Response) => {
-    const posts = await Posts.find({ creator: req.params.userId })
-        .sort({ createdAt: -1 });
-    res.json(posts);
+router.get('/list', async (req: Request, res: Response) => {
+    try {
+        const { postIds } = req.body;
+        if (!postIds || !Array.isArray(postIds)) {
+            return res.status(400).json({ message: 'Invalid post IDs' });
+        }
+
+        const posts = await Posts.find({ _id: { $in: postIds } })
+            .populate('creator')
+            .sort({ createdAt: -1 });
+
+        res.json(posts);
+    } catch (err) {
+        console.error("Get list posts error:", err);
+        res.status(500).json({ message: "Internal server error" });
+    }
 });
 
 // Like post
@@ -188,11 +224,16 @@ router.patch('/:id/like', requireAuth, async (req: AuthenticatedRequest, res: Re
     const userId = new mongoose.Types.ObjectId(req.userId);
     if (!userId) return res.status(400).json({ message: 'Invalid user ID' });
 
+    const user = await Users.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
     const alreadyLiked = post.likes.some((id) => id.equals(userId));
     if (alreadyLiked) {
         post.likes = post.likes.filter((id) => id.toString() !== req.userId);
+        user.likedPosts = user.likedPosts.filter((id) => id.toString() !== req.params.id);
     } else {
         post.likes.push(userId);
+        user.likedPosts.push(post._id);
     }
 
     await post.save();

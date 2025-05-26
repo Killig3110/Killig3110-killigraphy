@@ -1,22 +1,22 @@
 // src/models/User.ts
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
     name: { type: String },
     username: { type: String },
     accountId: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: { type: String, required: true, select: false },
     bio: { type: String },
     imageId: { type: String },
     imageUrl: { type: String, required: true },
+    likedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
 
-    // Relationships (tham chiếu bằng ObjectId)
-    posts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
-    liked: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
-    save: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Save' }],
+    followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 }, {
     timestamps: true
 });
 
-export default mongoose.model('User', userSchema);
+export default mongoose.model('User', userSchema,);

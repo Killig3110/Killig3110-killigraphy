@@ -6,6 +6,7 @@ services:
     volumes:
       - ./killigraphy:/app
       - /app/node_modules
+    working_dir: /app
     ports:
       - "80:80"
     environment:
@@ -22,6 +23,7 @@ services:
     volumes:
       - ./killigraphy_back_end:/app
       - /app/node_modules
+    working_dir: /app
     ports:
       - "5000:5000"
     depends_on:

@@ -34,13 +34,13 @@ const Topbar = () => {
                         <img src='/assets/icons/logout.svg' alt='logout' />
                     </Button>
 
-                    <Link to={'/profile/${user.id}'} className='flex-center gap-3'>
+                    <Link to={`/profile/${user._id}`} className='flex-center gap-3'>
                         <img
                             src={user.imageUrl || '/assets/images/profile-placeholder.svg'}
                             alt='profile'
                             className='h-8 w-8 rounded-full'
                         />
-                        <span className='text-sm font-semibold'>{user.name}</span>
+                        <span className='text-sm font-semibold truncate max-w-[75px]'>{user.name}</span>
                     </Link>
                 </div>
             </div>

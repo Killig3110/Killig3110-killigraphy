@@ -1,6 +1,10 @@
 import PostForm from "@/components/forms/PostForm"
+import { useLocation } from "react-router-dom";
 
 const CreatePost = () => {
+    const location = useLocation();
+    const prefillCaption = location.state?.prefillCaption || "";
+    const prefillFile = location.state?.prefillFile || null;
     return (
         <div className="flex flex-1">
             <div className="common-container">
@@ -14,7 +18,7 @@ const CreatePost = () => {
                         Create Post
                     </h2>
                 </div>
-                <PostForm action="Create" />
+                <PostForm action="Create" prefillCaption={prefillCaption} prefillFile={prefillFile} />
             </div>
         </div>
     )

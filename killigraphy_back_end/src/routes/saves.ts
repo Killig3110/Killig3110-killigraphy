@@ -50,6 +50,9 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =>
     const posts = saves
         .filter((s) => s.post != null)
         .map((s) => s.post);
+    if (!posts || posts.length === 0) {
+        return res.status(404).json({ message: 'No saved posts found' });
+    }
 
     res.json(posts);
 });

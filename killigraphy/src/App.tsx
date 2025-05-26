@@ -10,6 +10,7 @@ import {
     EditPost,
     Explore,
     Home,
+    LikedPosts,
     PostDetails,
     Profile,
     Saved,
@@ -21,6 +22,7 @@ import RootLayout from './_root/RootLayout';
 import { Toaster } from './components/ui/toaster';
 import { useUserContext } from './context/AuthContext';
 import Loader from "@/components/shared/Loader";
+import ProfileConnections from './_root/pages/ProfileConnections';
 
 const App = () => {
     const { isAuthenticated, isLoading } = useUserContext();
@@ -28,7 +30,6 @@ const App = () => {
     if (isLoading) return (
         <div className="w-full h-full flex-center">
             <Loader />
-            <p className="text-light-4 mt-2">Loading...</p>
         </div >
     );
     return (
@@ -61,8 +62,10 @@ const App = () => {
                     <Route path="/create-post" element={<CreatePost />} />
                     <Route path="/update-post/:postId" element={<EditPost />} />
                     <Route path="/posts/:postId" element={<PostDetails />} />
-                    <Route path="/profile/:id" element={<Profile />} />
-                    <Route path="/update-profile/:id" element={<UpdateProfile />} />
+                    <Route path="/profile/:userId/*" element={<Profile />} />
+                    <Route path="/update-profile/:userId" element={<UpdateProfile />} />
+                    <Route path="/liked-posts" element={<LikedPosts />} />
+                    <Route path="/profile/:id/connections" element={<ProfileConnections />} />
                 </Route>
             </Routes>
 

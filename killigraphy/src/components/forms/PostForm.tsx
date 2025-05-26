@@ -22,9 +22,11 @@ import { Post } from "@/lib/api"
 type PostFormProps = {
     post?: Post;
     action: "Create" | "Update";
+    prefillCaption?: string;
+    prefillFile?: File;
 }
 
-const PostForm = ({ post, action }: PostFormProps) => {
+const PostForm = ({ post, action, prefillCaption, prefillFile }: PostFormProps) => {
     const { mutateAsync: createPost, isPending: isLoadingCreate } = useCreatePostMutation();
     const { mutateAsync: updatePost, isPending: isLoadingUpdate } = useUpdatePostMutation();
 
@@ -34,10 +36,14 @@ const PostForm = ({ post, action }: PostFormProps) => {
     const form = useForm<z.infer<typeof PostValidation>>({
         resolver: zodResolver(PostValidation),
         defaultValues: {
-            caption: post ? post?.caption : "",
-            file: post && post.imageURL ? [new File([""], post.imageURL)] : [],
-            location: post ? post?.location : "",
-            tags: post ? post?.tags.join(',') : "",
+            caption: post ? post.caption : prefillCaption || "",
+            file: post?.imageURL
+                ? [new File([""], post.imageURL)]
+                : prefillFile
+                    ? [prefillFile]
+                    : [],
+            location: post ? post.location : "",
+            tags: post ? post.tags.join(',') : "",
         },
     })
 
@@ -105,7 +111,9 @@ const PostForm = ({ post, action }: PostFormProps) => {
                             <FormControl>
                                 <FileUpLoader
                                     fieldChange={field.onChange}
-                                    mediaUrl={post?.imageURL}
+                                    mediaUrl={
+                                        post?.imageURL ? post.imageURL : prefillFile ? URL.createObjectURL(prefillFile) : undefined
+                                    }
                                 />
                             </FormControl>
                             <FormMessage className="shad-form_message" />

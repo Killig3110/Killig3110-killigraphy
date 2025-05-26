@@ -10,6 +10,9 @@ export enum QUERY_KEYS {
     GET_CURRENT_USER = "getCurrentUser",
     GET_USERS = "getUsers",
     GET_USER_BY_ID = "getUserById",
+    GET_USER_FOLLOWERS = "getUserFollowers",
+    GET_USER_FOLLOWING = "getUserFollowing",
+    GET_USER_IS_FOLLOWING = "getUserIsFollowing",
 
     // POST KEYS
     GET_POSTS = "getPosts",
@@ -19,6 +22,7 @@ export enum QUERY_KEYS {
     GET_USER_POSTS = "getUserPosts",
     GET_FILE_PREVIEW = "getFilePreview",
     GET_POST_META = "getPostMeta",
+    GET_POST_LIST = "getPostList",
 
     //  SEARCH KEYS
     SEARCH_POSTS = "getSearchPosts",
@@ -29,4 +33,9 @@ export enum QUERY_KEYS {
     // COMMENT KEYS
     GET_COMMENTS_BY_POST = "getCommentsByPost",
 
+    // CHAT KEYS
+    GET_CHATS = "getChats",
+    GET_CHAT_BY_ID = "getChatById",
+    GET_CHAT_BY_USER_ID = "getChatByUserId",
+    GET_PRIVATE_CHAT_BY_USER_ID = "getPrivateChatByUserId",
 }

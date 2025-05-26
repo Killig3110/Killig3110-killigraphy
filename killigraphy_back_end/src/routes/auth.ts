@@ -23,7 +23,8 @@ router.post('/register', async (req: AuthenticatedRequest, res: Response) => {
         if (existingUser)
             return res.status(400).json({ message: 'Email already exists' });
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
         const user = await User.create({
             name,
@@ -45,7 +46,8 @@ router.post('/register', async (req: AuthenticatedRequest, res: Response) => {
 router.post('/login', async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
-        const user = await User.findOne({ email });
+
+        const user = await User.findOne({ email }).select('+password');
 
         if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(401).json({ message: 'Invalid credentials' });
@@ -56,7 +58,7 @@ router.post('/login', async (req: Request, res: Response) => {
 
         const token = await new SignJWT({ id: user._id })
             .setProtectedHeader({ alg: 'HS256' })
-            .setExpirationTime('1h')
+            .setExpirationTime('7d')
             .sign(new TextEncoder().encode(secret));
 
         // Set cookie
@@ -64,7 +66,7 @@ router.post('/login', async (req: Request, res: Response) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 60 * 60 * 1000, // 1h
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
 
         const { password: _, ...userWithoutPassword } = user.toObject();
@@ -103,6 +105,7 @@ router.post('/logout', (req: Request, res: Response) => {
 // Request OTP
 router.post('/request-otp', async (req: Request, res: Response) => {
     const { email } = req.body;
+    console.log('Requesting OTP for:', email);
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     await redis.set(`otp:${email}`, otp, 'EX', 300); // TTL 5 phút

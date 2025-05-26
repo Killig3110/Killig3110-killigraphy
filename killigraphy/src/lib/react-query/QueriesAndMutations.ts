@@ -30,6 +30,23 @@ import {
     PostSearchParams,
     searchPosts,
     fetchPostMeta,
+    toggleFollowUser,
+    checkIsFollowing,
+    getFollowers,
+    getFollowing,
+    getPaginatedUsers,
+    User,
+    getUserById,
+    getListPosts,
+    UpdateProfilePayload,
+    updateUser,
+    UpdatePasswordPayload,
+    updatePassword,
+    sendMessage,
+    getMessagesByChatId,
+    getUserChats,
+    getChatByUserId,
+    getPrivateChat,
 } from '../api';
 
 import { LoginPayload, RegisterPayload, PostPayload } from '../api';
@@ -73,6 +90,55 @@ export const useGetCurrentUserMutation = () =>
         queryKey: [QUERY_KEYS.GET_CURRENT_USER],
         queryFn: getCurrentUser,
     });
+
+export const useInfiniteUsersMutation = () => {
+    return useInfiniteQuery<User[]>({
+        queryKey: [QUERY_KEYS.GET_USERS],
+        initialPageParam: 1,
+        queryFn: async ({ pageParam = 1 }) => {
+            return await getPaginatedUsers(pageParam as number);
+        },
+        getNextPageParam: (lastPage, allPages) => {
+            return lastPage.length < 10 ? undefined : allPages.length + 1;
+        },
+    });
+};
+
+export const useGetUserByIdMutation = (userId: string) =>
+    useQuery({
+        queryKey: [QUERY_KEYS.GET_USER_BY_ID, userId],
+        queryFn: () => getUserById(userId),
+        enabled: !!userId,
+    });
+
+export const useUpdateUserMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ userId, ...rest }: UpdateProfilePayload) =>
+            updateUser(userId, rest as UpdateProfilePayload),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.GET_USER_BY_ID, data._id],
+            });
+        },
+    });
+};
+
+export const useChangePasswordMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ userId, ...rest }: UpdatePasswordPayload) => {
+            return updatePassword(userId, rest as UpdatePasswordPayload);
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.GET_USER_BY_ID, data._id],
+            });
+        },
+    });
+}
 
 // =========================
 // POST
@@ -149,6 +215,13 @@ export const useGetUserPostsMutation = (userId: string) =>
         enabled: !!userId,
     });
 
+export const useGetListPostsMutation = (listPosts: string[]) =>
+    useQuery({
+        queryKey: [QUERY_KEYS.GET_POST_LIST, listPosts],
+        queryFn: () => getListPosts(listPosts),
+        enabled: !!listPosts.length,
+    });
+
 // =========================
 // SAVED POSTS
 // =========================
@@ -207,7 +280,7 @@ export const useSearchPostsMutation = (params: PostSearchParams) =>
     useQuery({
         queryKey: [QUERY_KEYS.SEARCH_POSTS, params],
         queryFn: () => searchPosts(params),
-        enabled: !!params.query || !!params.tags?.length,
+        enabled: !!params.query || !!params.tags?.length || !!params.location,
     });
 
 export const usePostMetaMutation = () =>
@@ -215,6 +288,41 @@ export const usePostMetaMutation = () =>
         queryKey: [QUERY_KEYS.GET_POST_META],
         queryFn: fetchPostMeta,
         staleTime: 1000 * 60 * 5, // 5 minutes
+    });
+
+// useFollowMutation
+export const useToggleFollowMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (userId: string) => toggleFollowUser(userId),
+        onSuccess: (_, userId) => {
+            // Invalidate cache để cập nhật UI
+            queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GET_USER_IS_FOLLOWING, userId] });
+            queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GET_USER_FOLLOWERS, userId] });
+            queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GET_CURRENT_USER] });
+            queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GET_USER_BY_ID, userId] });
+        },
+    });
+};
+
+export const useIsFollowingQueryMutation = (userId: string, enabled = true) =>
+    useQuery({
+        queryKey: [QUERY_KEYS.GET_USER_IS_FOLLOWING, userId],
+        queryFn: () => checkIsFollowing(userId),
+        enabled,
+    });
+
+export const useFollowersQueryMutation = (userId: string) =>
+    useQuery({
+        queryKey: [QUERY_KEYS.GET_USER_FOLLOWERS, userId],
+        queryFn: () => getFollowers(userId),
+    });
+
+export const useFollowingQuery = (userId: string) =>
+    useQuery({
+        queryKey: [QUERY_KEYS.GET_USER_FOLLOWING, userId],
+        queryFn: () => getFollowing(userId),
     });
 
 // =========================
@@ -261,3 +369,48 @@ export const useGetCommentsByPostMutation = (postId: string) =>
         queryKey: [QUERY_KEYS.GET_COMMENTS_BY_POST, postId],
         queryFn: () => getCommentsByPost(postId),
     });
+
+// =========================
+// SOCKET
+// =========================
+
+export const useSendMessageMutation = () => {
+    return useMutation({
+        mutationFn: sendMessage,
+    });
+};
+
+export const useMessagesQuery = (chatId: string) => {
+    return useQuery({
+        queryKey: ["messages", chatId],
+        queryFn: () => getMessagesByChatId(chatId),
+        enabled: !!chatId,
+    });
+};
+
+export const useUserChatsQuery = () => {
+    return useQuery({
+        queryKey: ["user-chats"],
+        queryFn: getUserChats,
+    });
+};
+
+export const useGetChatByUserIdMutation = (userId: string) => {
+    return useQuery({
+        queryKey: [QUERY_KEYS.GET_CHAT_BY_USER_ID, userId],
+        queryFn: () => getChatByUserId(userId),
+        enabled: !!userId,
+    });
+}
+
+export const useGetPrivateChatMutation = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (userId: string) => getPrivateChat(userId),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.GET_PRIVATE_CHAT_BY_USER_ID, data],
+            });
+        },
+    });
+};

@@ -1,0 +1,17 @@
+export enum ChatAction {
+    MESSAGE = "message",
+    JOINED = "joined",
+    LEFT = "left",
+    KICKED = "kicked",
+    ADDED = "added",
+    RENAMED = "renamed",
+    DELETED = "deleted",
+    PROMOTED = "promoted",
+    DEMOTED = "demoted",
+    BLOCKED = "blocked",
+    UNBLOCKED = "unblocked",
+    MUTE = "mute",
+    UNMUTE = "unmute",
+    PINNED = "pinned",
+    UNPINNED = "unpinned",
+}

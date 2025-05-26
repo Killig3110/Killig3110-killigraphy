@@ -1,19 +1,25 @@
-# Base stage
+# --- Base build stage ---
 FROM node:20-alpine AS base
+
 WORKDIR /app
 
-# Cài deps trước
+# Cài đặt dependencies
 COPY package*.json ./
 RUN npm ci
 
-# Copy source và build
+# Copy toàn bộ mã nguồn và build
 COPY . .
 RUN npm run build
 
-# Nginx stage
+# --- Nginx production stage ---
 FROM nginx:alpine AS production
+
+# Copy bản build từ stage base vào thư mục Nginx
 COPY --from=base /app/dist /usr/share/nginx/html
+
+# Copy cấu hình Nginx nếu có
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
+
 CMD ["nginx", "-g", "daemon off;"]

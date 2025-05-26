@@ -28,23 +28,23 @@ const LeftSideBar = () => {
                     <img
                         src='/assets/images/logo_round.png'
                         alt='logo'
-                        className='w-24 h-24 rounded-full'
+                        className='w-20 h-20 lg:w-24 lg:h-24 rounded-full'
                     />
                 </Link>
 
-                <Link to={'/profile/${user.id}'} className='flex gap-3 items-center'>
+                <Link to={`/profile/${user._id}`} className='flex gap-3 items-center'>
                     <img
-                        src={user.imageUrl || '/assets/images/profile-placeholder.svg'}
+                        src={user.imageUrl || 'https://ik.imagekit.io/killigraphy/profile-placeholder.svg'}
                         alt='profile'
                         className='h-14 w-14 rounded-full'
                     />
                     <div className='flex flex-col'>
-                        <p className='body-bold'>
+                        <p className='body-bold truncate max-w-[150px]'>
                             {user.name}
                         </p>
 
-                        <p className='small-regular text-light-3'>
-                            @${user.username}
+                        <p className='small-regular text-light-3 truncate max-w-[150px]'>
+                            @{user.username}
                         </p>
                     </div>
                 </Link>

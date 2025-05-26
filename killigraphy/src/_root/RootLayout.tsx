@@ -1,14 +1,17 @@
-import BottomBar from '@/components/shared/Bottombar'
-import LeftSideBar from '@/components/shared/LeftSidebar'
-import Topbar from '@/components/shared/Topbar'
-import { useUserContext } from '@/context/AuthContext'
-import { Navigate, Outlet } from 'react-router-dom'
+import BottomBar from '@/components/shared/Bottombar';
+import LeftSideBar from '@/components/shared/LeftSidebar';
+import Loader from '@/components/shared/Loader';
+import Topbar from '@/components/shared/Topbar';
+import { useUserContext } from '@/context/AuthContext';
+import { Navigate, Outlet } from 'react-router-dom';
 
 const RootLayout = () => {
-  const { isAuthenticated, isLoading } = useUserContext();
+  const {
+    isAuthenticated,
+    isLoading
+  } = useUserContext();
 
-  if (isLoading) return <div className="text-center mt-10">Loading...</div>;
-
+  if (isLoading) return <div className="text-center mt-10"><Loader /></div>;
   if (!isAuthenticated) return <Navigate to="/sign-in" replace />;
 
   return (
@@ -25,4 +28,4 @@ const RootLayout = () => {
   )
 }
 
-export default RootLayout
+export default RootLayout;

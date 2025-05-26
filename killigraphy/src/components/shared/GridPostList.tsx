@@ -2,22 +2,48 @@ import { Link } from "react-router-dom";
 import { useUserContext } from "@/context/AuthContext";
 import PostStats from "./PostStats";
 import { Post } from "@/lib/api";
+import { useNavigate } from "react-router-dom";
 
 type GridPostListProps = {
     posts: Post[];
     showUser?: boolean;
     showStats?: boolean;
+    showCreatePostCard?: boolean;
 };
 
 const GridPostList = ({
     posts,
     showUser = true,
     showStats = true,
+    showCreatePostCard = false
 }: GridPostListProps) => {
     const { user } = useUserContext();
+    const navigate = useNavigate();
 
     return (
         <ul className="grid-container">
+            {showCreatePostCard && (
+                <li
+                    className="relative min-w-80 h-80 border-2 border-dashed border-primary-500 flex-center hover:bg-dark-4 transition cursor-pointer"
+                    onClick={() => navigate("/create-post")}
+                >
+                    <div className="text-center">
+                        <img
+                            src="/assets/icons/add-post.svg"
+                            alt="create"
+                            className="w-8 h-8 mx-auto mb-2"
+                        />
+                        <p className="text-primary-500 font-semibold">Create New Post</p>
+                    </div>
+                </li>
+            )}
+
+            {posts.length === 0 && !showCreatePostCard && (
+                <li className="col-span-full text-center text-light-3">
+                    No posts available.
+                </li>
+            )}
+
             {posts.map((post) => (
                 <li key={post._id} className="relative min-w-80 h-80">
                     <Link to={`/posts/${post._id}`} className="grid-post_link">

@@ -20,6 +20,11 @@ const Home = () => {
             <Loader />
           ) : (
             <ul className='flex flex-col flex-1 gap-9 w-full'>
+              {
+                posts?.length === 0 && !isPostLoading ? (
+                  <p className='text-light-4'>No available posts</p>
+                ) : null
+              }
               {posts?.map((post: Post) => (
                 <PostCard key={post._id} post={post} />
               ))}
