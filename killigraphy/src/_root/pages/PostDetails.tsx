@@ -60,8 +60,9 @@ const PostDetails = () => {
                                 className="flex items-center gap-3">
                                 <img
                                     src={
-                                        post?.creator.imageUrl ||
-                                        "/assets/icons/profile-placeholder.svg"
+                                        post.creator.imageUrl?.startsWith("https://ik.imagekit.io/killigraphy/avatars/avatar")
+                                            ? "/assets/icons/profile-placeholder.svg"
+                                            : user.imageUrl || "/assets/icons/profile-placeholder.svg"
                                     }
                                     alt="creator"
                                     className="w-8 h-8 lg:w-12 lg:h-12 rounded-full"

@@ -37,7 +37,7 @@ const UserCardHorizontal = ({ user, isFollowing, onToggleFollow }: Props) => {
             {!isSelf && (
                 <Button
                     size="sm"
-                    className={`text-xs ${isFollowing ? ".shad-button_dark_4_primary" : "shad-button_primary"
+                    className={`text-xs ${isFollowing ? "shad-button_dark_4_primary" : "shad-button_primary"
                         }`}
                     onClick={onToggleFollow}
                 >

@@ -8,6 +8,8 @@ import multer from 'multer';
 import fs from 'fs';
 import { uploadToImageKit } from '../utils/uploadToImageKit';
 import bcrypt from 'bcryptjs';
+import redis from '../config/redis';
+import Posts from '../models/Posts';
 
 const router = express.Router();
 
@@ -23,16 +25,38 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =>
         const skip = (page - 1) * limit;
         const currentUserId = req.userId;
 
-        const query = currentUserId ? { _id: { $ne: currentUserId } } : {};
+        const zsetKey = `suggestions:zset:${currentUserId}`;
+        const totalRedisCount = await redis.zcard(zsetKey);
 
-        const users = await User.find(query)
+        // Lấy từ Redis trước
+        const redisUsersRaw = await redis.zrevrange(zsetKey, skip, skip + limit - 1);
+        const redisUserIds = redisUsersRaw.map((id) => id.toString());
+
+        const redisUsers = await User.find({ _id: { $in: redisUserIds } })
+            .select('-password -__v -createdAt -updatedAt');
+
+        const fetchedRedisCount = redisUsers.length;
+
+        // Nếu đã đủ từ Redis thì return luôn
+        if (fetchedRedisCount >= limit) {
+            return res.status(200).json(redisUsers);
+        }
+
+        // Nếu chưa đủ → fallback từ Mongo
+        const excludedIds = [...redisUserIds, currentUserId]; // tránh lặp lại user
+        const fallbackSkip = Math.max(0, skip - totalRedisCount);
+        const fallbackLimit = limit - fetchedRedisCount;
+
+        const mongoUsers = await User.find({ _id: { $nin: excludedIds } })
             .select('-password -__v -createdAt -updatedAt')
-            .skip(skip)
-            .limit(limit);
+            .skip(fallbackSkip)
+            .limit(fallbackLimit);
 
-        res.status(200).json(users);
+        const combinedUsers = [...redisUsers, ...mongoUsers];
+
+        res.status(200).json(combinedUsers);
     } catch (error) {
-        console.error('Error fetching paginated users:', error);
+        console.error('Error fetching paginated users with suggestions fallback:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 });
@@ -52,12 +76,26 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 // GET /users/:id/followers
-router.get('/:id/followers', async (req: Request, res: Response) => {
+router.get('/:id/followers', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const user = await User.findById(req.params.id).populate('followers', '-password -__v');
-        if (!user) return res.status(404).json({ message: 'User not found' });
+        const targetUser = await User.findById(req.params.id).populate('followers', '-password -__v');
+        if (!targetUser) return res.status(404).json({ message: 'User not found' });
 
-        res.status(200).json(user.followers);
+        const currentUserId = req.userId;
+        const currentUser = await User.findById(currentUserId);
+        if (!currentUser) return res.status(404).json({ message: 'Current user not found' });
+
+        const followersWithFollowStatus = (targetUser.followers as any[]).map((follower) => ({
+            _id: follower._id,
+            name: follower.name,
+            username: follower.username,
+            imageUrl: follower.imageUrl,
+            isFollowing: currentUser.following?.some(
+                (id) => id.toString() === follower._id.toString()
+            ) ?? false,
+        }));
+
+        res.status(200).json(followersWithFollowStatus);
     } catch (err) {
         console.error("Get followers error:", err);
         res.status(500).json({ message: 'Internal server error' });
@@ -210,5 +248,94 @@ router.patch('/:id/password', requireAuth, async (req: AuthenticatedRequest, res
         res.status(500).json({ message: 'Internal server error' });
     }
 });
+
+// GET /users/:id/suggestions?page=1&limit=10
+// GET /users/:id/suggestions?page=1&limit=10
+router.get('/:id/suggestions', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const userId = req.params.id;
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: "Invalid user ID" });
+        }
+
+        const cacheKey = `suggestions:${userId}:page:${page}`;
+        const zsetKey = `suggestions:zset:${userId}`;
+
+        // 1. Check cached page
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+            return res.json(JSON.parse(cached));
+        }
+
+        // 2. Nếu chưa có, kiểm tra xem đã có ZSET chưa
+        const totalSuggestions = await redis.zcard(zsetKey);
+        if (totalSuggestions === 0) {
+            // Chưa có → generate suggestions theo mutual + tags
+            const currentUser = await User.findById(userId).select('following');
+            if (!currentUser) return res.status(404).json({ message: 'User not found' });
+
+            const excludedIds = [userId, ...currentUser.following.map(id => id.toString())];
+            const mutualMap = new Map<string, number>();
+
+            const followedUsers = await User.find({ _id: { $in: currentUser.following } }).select('following');
+            for (const u of followedUsers) {
+                for (const followee of u.following) {
+                    const strId = followee.toString();
+                    if (!excludedIds.includes(strId)) {
+                        mutualMap.set(strId, (mutualMap.get(strId) || 0) + 1);
+                    }
+                }
+            }
+
+            const userPosts = await Posts.find({ $or: [{ author: userId }, { likes: userId }] }).select('tags');
+            const tagCount: Record<string, number> = {};
+            userPosts.forEach(p => {
+                p.tags.forEach(tag => {
+                    tagCount[tag] = (tagCount[tag] || 0) + 1;
+                });
+            });
+
+            const allOtherUsers = await User.find({ _id: { $nin: excludedIds } }).select('_id');
+            const userIdList = allOtherUsers.map(u => u._id.toString());
+
+            for (const otherUserId of userIdList) {
+                const posts = await Posts.find({ author: otherUserId }).select('tags');
+                let tagScore = 0;
+                posts.forEach(post => {
+                    post.tags.forEach(tag => {
+                        tagScore += tagCount[tag] || 0;
+                    });
+                });
+
+                const mutualScore = mutualMap.get(otherUserId) || 0;
+                const finalScore = mutualScore * 10 + tagScore;
+
+                if (finalScore > 0) {
+                    await redis.zadd(zsetKey, finalScore, otherUserId);
+                }
+            }
+
+            await redis.expire(zsetKey, 300); // cache ZSET 5 phút
+        }
+
+        // 3. Lấy danh sách userId từ ZSET đã tính
+        const suggestedIds = await redis.zrevrange(zsetKey, skip, skip + limit - 1);
+        const suggestedUsers = await User.find({ _id: { $in: suggestedIds } })
+            .select('-password -__v -createdAt -updatedAt');
+
+        // 4. Cache kết quả trang
+        await redis.setex(cacheKey, 300, JSON.stringify(suggestedUsers));
+
+        res.json(suggestedUsers);
+    } catch (err) {
+        console.error("Error getting suggestions:", err);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
 
 export default router;

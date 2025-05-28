@@ -65,7 +65,7 @@ const App = () => {
                     <Route path="/profile/:userId/*" element={<Profile />} />
                     <Route path="/update-profile/:userId" element={<UpdateProfile />} />
                     <Route path="/liked-posts" element={<LikedPosts />} />
-                    <Route path="/profile/:id/connections" element={<ProfileConnections />} />
+                    <Route path="/profile/:userId/connections" element={<ProfileConnections />} />
                 </Route>
             </Routes>
 

@@ -59,8 +59,9 @@ const GridPostList = ({
                             <div className="flex items-center justify-start gap-2 flex-1">
                                 <img
                                     src={
-                                        post.creator.imageUrl ||
-                                        "/assets/icons/profile-placeholder.svg"
+                                        post.creator.imageUrl?.startsWith("https://ik.imagekit.io/killigraphy/avatars/avatar")
+                                            ? "/assets/icons/profile-placeholder.svg"
+                                            : user.imageUrl || "/assets/icons/profile-placeholder.svg"
                                     }
                                     alt="creator"
                                     className="w-8 h-8 rounded-full"

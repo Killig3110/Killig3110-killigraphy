@@ -47,6 +47,9 @@ import {
     getUserChats,
     getChatByUserId,
     getPrivateChat,
+    suggestedPaginatedUsers,
+    getFeedPersonalized,
+    PostMeta,
 } from '../api';
 
 import { LoginPayload, RegisterPayload, PostPayload } from '../api';
@@ -188,6 +191,15 @@ export const useGetRecentPostsMutation = () =>
         queryFn: getRecentPosts,
     });
 
+export const useGetFeedPersonalizedMutation = () =>
+    useInfiniteQuery({
+        queryKey: [QUERY_KEYS.GET_PERSONALIZED_FEED],
+        queryFn: ({ pageParam = 1 }) => getFeedPersonalized(pageParam, 12),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage, allPages) =>
+            lastPage.length < 12 ? undefined : allPages.length + 1,
+    });
+
 export const useToggleLikePostMutation = () => {
     const queryClient = useQueryClient();
 
@@ -284,9 +296,12 @@ export const useSearchPostsMutation = (params: PostSearchParams) =>
     });
 
 export const usePostMetaMutation = () =>
-    useQuery({
+    useInfiniteQuery({
         queryKey: [QUERY_KEYS.GET_POST_META],
-        queryFn: fetchPostMeta,
+        queryFn: ({ pageParam = 1 }) => fetchPostMeta(pageParam) as Promise<PostMeta>,
+        initialPageParam: 1,
+        getNextPageParam: (lastPage, allPages) =>
+            lastPage.hasMore ? allPages.length + 1 : undefined,
         staleTime: 1000 * 60 * 5, // 5 minutes
     });
 
@@ -324,6 +339,24 @@ export const useFollowingQuery = (userId: string) =>
         queryKey: [QUERY_KEYS.GET_USER_FOLLOWING, userId],
         queryFn: () => getFollowing(userId),
     });
+
+export const useSuggestedUsersQuery = (userId: string) =>
+    useQuery({
+        queryKey: [QUERY_KEYS.GET_SUGGESTED_USERS, userId],
+        queryFn: () => suggestedPaginatedUsers(1, 10, userId),
+        enabled: !!userId,
+    });
+
+export const useSuggestedUsersInfiniteQuery = (userId: string) => {
+    return useInfiniteQuery({
+        queryKey: [QUERY_KEYS.GET_SUGGESTED_USERS, userId],
+        queryFn: ({ pageParam = 1 }) => suggestedPaginatedUsers(pageParam, 10, userId),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage, allPages) =>
+            lastPage.length < 10 ? undefined : allPages.length + 1,
+        enabled: !!userId,
+    });
+};
 
 // =========================
 // COMMENTS

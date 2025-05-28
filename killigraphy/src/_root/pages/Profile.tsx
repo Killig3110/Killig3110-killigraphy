@@ -30,7 +30,7 @@ interface StatBlockProps {
 // StatBlock component to display user stats like posts, followers, and following
 const StatBlock = ({ value, label, onClick }: StatBlockProps & { onClick?: () => void }) => (
     <div
-        className="flex-center gap-2 cursor-pointer hover:underline"
+        className="flex-center gap-2 cursor-pointer"
         onClick={onClick}
     >
         <p className="small-semibold lg:body-bold text-primary-500">{value}</p>
@@ -145,21 +145,23 @@ const Profile = () => {
             </div>
 
             {isSelf && (
-                <div className="flex max-w-5xl w-full">
-                    <Link
-                        to={`/profile/${userId}`}
-                        className={`profile-tab rounded-l-lg ${pathname === `/profile/${userId}` && "!bg-dark-3"}`}
-                    >
-                        <img src="/assets/icons/posts.svg" alt="posts" width={20} height={20} />
-                        Posts
-                    </Link>
-                    <Link
-                        to={`/profile/${userId}/liked-posts`}
-                        className={`profile-tab rounded-r-lg ${pathname === `/profile/${userId}/liked-posts` && "!bg-dark-3"}`}
-                    >
-                        <img src="/assets/icons/like.svg" alt="like" width={20} height={20} />
-                        Liked Posts
-                    </Link>
+                <div className="flex justify-center w-full mt-6">
+                    <div className="flex max-w-5xl w-full justify-center">
+                        <Link
+                            to={`/profile/${userId}`}
+                            className={`profile-tab rounded-l-lg ${pathname === `/profile/${userId}` && "!bg-dark-3"}`}
+                        >
+                            <img src="/assets/icons/posts.svg" alt="posts" width={20} height={20} />
+                            Posts
+                        </Link>
+                        <Link
+                            to={`/profile/${userId}/liked-posts`}
+                            className={`profile-tab rounded-r-lg ${pathname === `/profile/${userId}/liked-posts` && "!bg-dark-3"}`}
+                        >
+                            <img src="/assets/icons/like.svg" alt="like" width={20} height={20} />
+                            Liked Posts
+                        </Link>
+                    </div>
                 </div>
             )}
 

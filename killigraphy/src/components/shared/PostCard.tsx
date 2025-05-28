@@ -21,7 +21,11 @@ const PostCard = ({ post }: PostCardProps) => {
                 <div className='flex items-center gap-3'>
                     <Link to={`/profile/${post?.creator?._id}`}>
                         <img
-                            src={post?.creator?.imageUrl || '/assets/icons/profile-placeholder.svg'}
+                            src={
+                                post.creator.imageUrl?.startsWith("https://ik.imagekit.io/killigraphy/avatars/avatar")
+                                    ? "/assets/icons/profile-placeholder.svg"
+                                    : user.imageUrl || "/assets/icons/profile-placeholder.svg"
+                            }
                             alt="Creator Image"
                             className='w-10 h-10 rounded-full lg:h-12'
                         />

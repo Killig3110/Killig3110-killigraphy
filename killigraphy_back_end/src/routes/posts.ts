@@ -9,6 +9,7 @@ import mongoose from 'mongoose';
 import imagekit from '../config/imagekit';
 import redis from '../config/redis';
 import Users from '../models/Users';
+import { generatePersonalizedFeed } from '../services/feedService';
 
 const router = express.Router();
 
@@ -121,28 +122,43 @@ router.delete('/:id', requireAuth, async (req: AuthenticatedRequest, res: Respon
 
 router.get("/meta/trend", async (req, res) => {
     try {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const skip = (page - 1) * limit;
+
         const cached = await redis.get("post:meta");
+        let tags: string[] = [];
+        let locations: string[] = [];
+
         if (cached) {
-            return res.json(JSON.parse(cached));
+            const parsed = JSON.parse(cached);
+            tags = parsed.tags;
+            locations = parsed.locations;
+        } else {
+            const posts = await Posts.find({}, "tags location -_id");
+
+            const tagSet = new Set<string>();
+            const locationSet = new Set<string>();
+
+            posts.forEach((post) => {
+                post.tags.forEach((tag) => tagSet.add(tag));
+                if (post.location) locationSet.add(post.location);
+            });
+
+            tags = Array.from(tagSet);
+            locations = Array.from(locationSet);
+
+            await redis.setex("post:meta", 300, JSON.stringify({ tags, locations }));
         }
 
-        const posts = await Posts.find({}, "tags location -_id");
-        const tagSet = new Set<string>();
-        const locationSet = new Set<string>();
+        const paginatedTags = tags.slice(skip, skip + limit);
+        const paginatedLocations = locations.slice(skip, skip + limit);
 
-        posts.forEach((post) => {
-            post.tags.forEach((tag) => tagSet.add(tag));
-            if (post.location) locationSet.add(post.location);
+        res.json({
+            tags: paginatedTags,
+            locations: paginatedLocations,
+            hasMore: skip + limit < tags.length || skip + limit < locations.length,
         });
-
-        const data = {
-            tags: Array.from(tagSet),
-            locations: Array.from(locationSet),
-        };
-
-        await redis.setex("post:meta", 300, JSON.stringify(data));
-
-        res.json(data);
     } catch (err) {
         res.status(500).json({ message: "Failed to fetch meta", error: err });
     }
@@ -240,9 +256,34 @@ router.patch('/:id/like', requireAuth, async (req: AuthenticatedRequest, res: Re
     res.json(post);
 });
 
+router.get('/feed/personalized', requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+        const { page = 1, limit = 12 } = req.query;
+        const skip = (Number(page) - 1) * Number(limit);
+        const redisKey = `feed:${req.userId}`;
+
+        // Try cache
+        let posts: any[] = [];
+        const cached = await redis.get(redisKey);
+
+        if (cached) {
+            posts = JSON.parse(cached);
+        } else {
+            posts = await generatePersonalizedFeed(req.userId as string);
+            await redis.set(redisKey, JSON.stringify(posts), 'EX', 300); // 5 minutes
+        }
+
+        const paginated = posts.slice(skip, skip + Number(limit));
+        res.status(200).json(paginated);
+    } catch (err) {
+        console.error('Feed error:', err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
 // Get posts with pagination
 router.get('/', async (req: AuthenticatedRequest, res: Response) => {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 12 } = req.query;
 
     const posts = await Posts.find()
         .skip((Number(page) - 1) * Number(limit))

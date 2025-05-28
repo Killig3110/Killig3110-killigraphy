@@ -13,6 +13,7 @@ export enum QUERY_KEYS {
     GET_USER_FOLLOWERS = "getUserFollowers",
     GET_USER_FOLLOWING = "getUserFollowing",
     GET_USER_IS_FOLLOWING = "getUserIsFollowing",
+    GET_SUGGESTED_USERS = "getUserSuggestions",
 
     // POST KEYS
     GET_POSTS = "getPosts",
@@ -23,6 +24,7 @@ export enum QUERY_KEYS {
     GET_FILE_PREVIEW = "getFilePreview",
     GET_POST_META = "getPostMeta",
     GET_POST_LIST = "getPostList",
+    GET_PERSONALIZED_FEED = "getPersonalizedFeed",
 
     //  SEARCH KEYS
     SEARCH_POSTS = "getSearchPosts",

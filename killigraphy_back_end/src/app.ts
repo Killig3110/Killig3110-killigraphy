@@ -13,6 +13,8 @@ import usersRouter from './routes/users';
 import chatsRouter from './routes/chats';
 import messageRouter from './routes/messages';
 import { initSocket } from "./socket";
+import cron from 'node-cron';
+import { refreshSuggestionsForAllUsers } from './cron/refreshSuggestions';
 
 const allowedOrigins = ['http://localhost', 'http://localhost:5173'];
 dotenv.config();
@@ -38,6 +40,11 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+
+cron.schedule('*/10 * * * *', () => {
+    console.log("Running suggestion refresh job...");
+    refreshSuggestionsForAllUsers().catch(console.error);
+});
 
 // Routes
 app.use('/api/auth', authRoutes);

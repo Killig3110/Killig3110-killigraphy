@@ -49,10 +49,11 @@ export interface User {
     imageUrl: string;
     createdAt?: string;
     updatedAt?: string;
-    likedPosts?: string[]; // or Post[]
+    likedPosts?: string[];
 
-    followers?: string[]; // or User[]
-    following?: string[]; // or User[]
+    followers?: string[];
+    following?: string[];
+    isFollowing?: boolean;
 }
 
 export interface PostPayload {
@@ -98,6 +99,7 @@ export interface PostSearchParams {
 export interface PostMeta {
     tags: string[];
     locations: string[];
+    hasMore: boolean;
 }
 
 export enum MessageType {
@@ -161,10 +163,15 @@ export const logoutUser = async () => {
 // ========== USER API =========================
 // =========================
 
-export const getPaginatedUsers = async (page: number, limit = 10): Promise<User[]> => {
+export const getPaginatedUsers = async (page: number, limit = 12): Promise<User[]> => {
     const res = await API.get<User[]>(`/users?page=${page}&limit=${limit}`);
     return res.data;
 };
+
+export const suggestedPaginatedUsers = async (page: number, limit = 10, userId: string): Promise<User[]> => {
+    const res = await API.get<User[]>(`/users/${userId}/suggestions?page=${page}&limit=${limit}`);
+    return res.data;
+}
 
 export const toggleFollowUser = async (userId: string): Promise<{ message: string; isFollowing: boolean }> => {
     const res = await API.patch<{ message: string; isFollowing: boolean }>(`/users/${userId}/follow`);
@@ -241,6 +248,11 @@ export const getRecentPosts = async (): Promise<Post[]> => {
     return res.data;
 };
 
+export const getFeedPersonalized = async (page: number, limit: 12): Promise<Post[]> => {
+    const res = await API.get<Post[]>(`/posts/feed/personalized?page=${page}&limit=${limit}`);
+    return res.data;
+}
+
 export const searchPosts = async (params: PostSearchParams): Promise<Post[]> => {
     const queryParams = new URLSearchParams();
 
@@ -254,9 +266,11 @@ export const searchPosts = async (params: PostSearchParams): Promise<Post[]> => 
     return res.data;
 };
 
-export const fetchPostMeta = async (): Promise<PostMeta> => {
-    const res = await API.get<PostMeta>("/posts/meta/trend");
-    return res.data; // { tags: [...], locations: [...] }
+export const fetchPostMeta = async (pageParam = 1): Promise<PostMeta> => {
+    const res = await API.get<PostMeta>("/posts/meta/trend", {
+        params: { page: pageParam, limit: 10 },
+    });
+    return res.data;
 };
 
 export const getPostById = async (postId: string): Promise<Post> => {
@@ -275,7 +289,7 @@ export const getListPosts = async (postIds: string[]): Promise<Post[]> => {
 }
 
 export const fetchPaginatedPosts = async (page = 1): Promise<Post[]> => {
-    const res = await API.get<Post[]>(`/posts?page=${page}&limit=10`);
+    const res = await API.get<Post[]>(`/posts?page=${page}&limit=12`);
     return res.data;
 };
 
