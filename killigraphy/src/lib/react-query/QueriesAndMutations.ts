@@ -26,7 +26,7 @@ import {
     updatePost,
     getUserPosts,
     fetchPaginatedPosts,
-    Post,
+    PaginatedPostResponse,
     PostSearchParams,
     searchPosts,
     fetchPostMeta,
@@ -276,14 +276,14 @@ export const useGetSavedPostsMutation = () =>
     });
 
 export const useInfinitePostsMutation = () => {
-    return useInfiniteQuery<Post[], Error>({
+    return useInfiniteQuery<PaginatedPostResponse, Error>({
         queryKey: [QUERY_KEYS.GET_POSTS],
         queryFn: async ({ pageParam = 1 }) => {
             return await fetchPaginatedPosts(pageParam as number);
         },
         initialPageParam: 1,
         getNextPageParam: (lastPage, allPages) => {
-            return lastPage.length < 10 ? undefined : allPages.length + 1;
+            return lastPage.hasMore ? allPages.length + 1 : undefined;
         },
     });
 };

@@ -144,13 +144,13 @@ const Explore = () => {
                         ) : searchResults?.length ? (
                             <GridPostList posts={searchResults} />
                         ) : (
-                            <p className="text-light-4 text-center mt-10">Không tìm thấy kết quả.</p>
+                            <p className="text-light-4 text-center mt-10"> No results found for your search.</p>
                         )
                     ) : isFetchingPosts ? (
                         <Loader />
                     ) : (
                         infinitePosts?.pages.map((group, i) => (
-                            <GridPostList key={`page-${i}`} posts={group} />
+                            <GridPostList key={`page-${i}`} posts={group.posts} />
                         ))
                     )}
 

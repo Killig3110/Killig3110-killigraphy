@@ -76,6 +76,11 @@ export interface Post {
     updatedAt: string;
 }
 
+export interface PaginatedPostResponse {
+    posts: Post[];
+    hasMore: boolean;
+}
+
 export interface CommentType {
     _id: string;
     content: string;
@@ -288,8 +293,10 @@ export const getListPosts = async (postIds: string[]): Promise<Post[]> => {
     return res.data;
 }
 
-export const fetchPaginatedPosts = async (page = 1): Promise<Post[]> => {
-    const res = await API.get<Post[]>(`/posts?page=${page}&limit=12`);
+export const fetchPaginatedPosts = async (page = 1): Promise<PaginatedPostResponse> => {
+    const res = await API.get<PaginatedPostResponse>(`/posts`, {
+        params: { page, limit: 12 },
+    });
     return res.data;
 };
 
