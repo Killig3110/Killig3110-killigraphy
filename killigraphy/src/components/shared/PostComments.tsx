@@ -51,7 +51,11 @@ const PostComments = ({ postId, postCreatorId }: PostCommentsProps) => {
         <div className="flex flex-col gap-1 mt-3">
             <div className="flex items-start gap-2">
                 <img
-                    src={comment.user.imageUrl}
+                    src={
+                        comment.user.imageUrl?.startsWith("https://ik.imagekit.io/killigraphy/avatars/avatar")
+                            ? "/assets/icons/profile-placeholder.svg"
+                            : comment.user.imageUrl || "/assets/icons/profile-placeholder.svg"
+                    }
                     alt="avatar"
                     className="w-8 h-8 rounded-full"
                 />

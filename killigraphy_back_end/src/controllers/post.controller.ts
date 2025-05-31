@@ -1,10 +1,7 @@
 import e, { Request, Response } from "express";
 import * as postService from "../services/post.service";
 import * as feedService from "../services/feed.service";
-
-interface AuthenticatedRequest extends Request {
-    userId?: string;
-}
+import { AuthenticatedRequest } from '../types/index';
 
 export const createPost = async (req: AuthenticatedRequest, res: Response) => {
     try {
@@ -28,7 +25,6 @@ export const updatePost = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { caption, location, tags } = req.body;
         const image = req.file;
-        const userId = req.userId!;
 
         const updated = await postService.updatePost({
             id: req.params.id,
@@ -36,17 +32,13 @@ export const updatePost = async (req: AuthenticatedRequest, res: Response) => {
             location,
             tags,
             image,
-            userId,
+            userId: req.userId!,
         });
 
         res.json(updated);
     } catch (err: any) {
         console.error("Update post error:", err);
-        if (err.message === "Post not found") {
-            res.status(404).json({ message: "Post not found" });
-        } else {
-            res.status(500).json({ message: "Internal server error" });
-        }
+        res.status(500).json({ message: "Internal server error" });
     }
 };
 

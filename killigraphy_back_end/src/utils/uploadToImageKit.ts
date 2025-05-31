@@ -2,7 +2,8 @@ import imagekit from "../config/imagekit";
 import fs from "fs";
 
 export const uploadToImageKit = async (file: Express.Multer.File) => {
-    const fileBuffer = fs.readFileSync(file.path);
+    const fileBuffer = file.buffer;
+    if (!fileBuffer) throw new Error("Missing file buffer");
 
     const uploaded = await imagekit.upload({
         file: fileBuffer,

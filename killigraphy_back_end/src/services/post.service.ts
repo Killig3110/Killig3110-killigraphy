@@ -34,7 +34,6 @@ export const createPost = async ({ caption, location, tags, file, userId }: Crea
     if (!file) throw new Error("Image required");
 
     const result = await uploadToImageKit(file);
-    fs.unlinkSync(file.path);
 
     const parsedTags = tags?.split(',').map(tag => tag.trim());
 
@@ -50,11 +49,12 @@ export const createPost = async ({ caption, location, tags, file, userId }: Crea
     return post;
 };
 
+
 export const updatePost = async ({ id, caption, location, tags, image, userId }: UpdatePostInput) => {
     const post = await postRepo.findPostById(id);
     if (!post) throw new Error("Post not found");
 
-    if (image) {
+    if (image && image.buffer) {
         if (post.imageId) {
             try {
                 await imagekit.deleteFile(post.imageId);
@@ -64,7 +64,6 @@ export const updatePost = async ({ id, caption, location, tags, image, userId }:
         }
 
         const result = await uploadToImageKit(image);
-        fs.unlinkSync(image.path);
 
         post.imageId = result.fileId;
         post.imageURL = result.url;

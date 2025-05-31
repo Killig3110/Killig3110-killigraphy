@@ -16,7 +16,7 @@ import { initSocket } from "./socket";
 import cron from 'node-cron';
 import { refreshSuggestionsForAllUsers } from './cron/refreshSuggestions';
 
-const allowedOrigins = ['http://localhost', 'http://localhost:5173'];
+const allowedOrigins = ['http://localhost', 'http://localhost:80', 'http://localhost:5173'];
 dotenv.config();
 
 const app = express();

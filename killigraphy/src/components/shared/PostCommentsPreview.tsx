@@ -24,7 +24,11 @@ const PostCommentsPreview = ({ postId }: { postId: string }) => {
             {latest ? (
                 <div className="flex gap-2 items-start">
                     <img
-                        src={latest.user.imageUrl}
+                        src={
+                            latest.user.imageUrl?.startsWith("https://ik.imagekit.io/killigraphy/avatars/avatar")
+                                ? "/assets/icons/profile-placeholder.svg"
+                                : latest.user.imageUrl || "/assets/icons/profile-placeholder.svg"
+                        }
                         alt="avatar"
                         className="w-8 h-8 rounded-full"
                     />

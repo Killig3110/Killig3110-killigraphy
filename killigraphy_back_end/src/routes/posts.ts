@@ -1,10 +1,9 @@
 import express from "express";
 import * as postController from "../controllers/post.controller";
 import { requireAuth } from "../middleware/requireAuth";
-import multer from "multer";
+import { upload } from "../middleware/upload";
 
 const router = express.Router();
-const upload = multer({ dest: "/posts/uploads/" });
 
 router.post("/", requireAuth, upload.single("image"), postController.createPost);
 router.patch("/:id", requireAuth, upload.single("image"), postController.updatePost);

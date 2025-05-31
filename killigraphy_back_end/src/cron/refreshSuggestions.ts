@@ -3,7 +3,6 @@ import redis from '../config/redis';
 import User from '../models/Users';
 import Posts from '../models/Posts';
 
-// Hàm chính để refresh toàn bộ suggestion ZSET cho tất cả users
 export const refreshSuggestionsForAllUsers = async () => {
     try {
         const users = await User.find({}, '_id following');

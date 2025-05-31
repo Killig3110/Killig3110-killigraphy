@@ -24,7 +24,7 @@ const PostCard = ({ post }: PostCardProps) => {
                             src={
                                 post.creator.imageUrl?.startsWith("https://ik.imagekit.io/killigraphy/avatars/avatar")
                                     ? "/assets/icons/profile-placeholder.svg"
-                                    : user.imageUrl || "/assets/icons/profile-placeholder.svg"
+                                    : post.creator.imageUrl || "/assets/icons/profile-placeholder.svg"
                             }
                             alt="Creator Image"
                             className='w-10 h-10 rounded-full lg:h-12'
