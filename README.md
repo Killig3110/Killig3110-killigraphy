@@ -159,7 +159,7 @@ Hi, I'm [Killig3110]! 👋
 
 - 🌱 I’m passionate about full-stack development, especially in building scalable social media platforms.
 - 🛠️ Main Tech Stack: Node.js, React, TypeScript, MongoDB, Redis, Docker.
-- 📫 Reach me at: your.email@example.com
+- 📫 Reach me at: killig.3110@gmail.com
 - 🔗 Connect with me: [LinkedIn](https://www.linkedin.com/in/killig3110/) | [GitHub](https://github.com/Killig3110)
 
 Feel free to reach out if you have any questions or want to collaborate!
