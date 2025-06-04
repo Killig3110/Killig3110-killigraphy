@@ -77,7 +77,7 @@ killigraphy/
 ### Setup Environment
 
 ```bash
-git clone https://github.com/your-username/killigraphy.git
+git clone https://github.com/Killig3110/Killig3110-killigraphy.git
 cd killigraphy
 ```
 
@@ -160,6 +160,6 @@ Hi, I'm [Killig3110]! 👋
 - 🌱 I’m passionate about full-stack development, especially in building scalable social media platforms.
 - 🛠️ Main Tech Stack: Node.js, React, TypeScript, MongoDB, Redis, Docker.
 - 📫 Reach me at: your.email@example.com
-- 🔗 Connect with me: [LinkedIn]([https://linkedin.com/in/your-profile](https://www.linkedin.com/in/killig3110/)) | [GitHub]([https://github.com/your-username](https://github.com/Killig3110))
+- 🔗 Connect with me: [LinkedIn](https://www.linkedin.com/in/killig3110/) | [GitHub]9https://github.com/Killig3110)
 
 Feel free to reach out if you have any questions or want to collaborate!
