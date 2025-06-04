@@ -1,7 +1,7 @@
-import mongoose from 'mongoose';
-import redis from '../config/redis';
 import User from '../models/Users';
 import Posts from '../models/Posts';
+import RedisClient from '../config/redis';
+import { redisAdapterSingleton } from '../utils/singleton/RedisAdapterSingleton';
 
 export const refreshSuggestionsForAllUsers = async () => {
     try {
@@ -27,35 +27,39 @@ export const refreshSuggestionsForAllUsers = async () => {
             const userPosts = await Posts.find({ $or: [{ author: userId }, { likes: userId }] }).select('tags');
             const tagCount: Record<string, number> = {};
             userPosts.forEach(p => {
-                p.tags.forEach(tag => {
-                    tagCount[tag] = (tagCount[tag] || 0) + 1;
-                });
+                if (p.tags) {
+                    p.tags.forEach(tag => {
+                        tagCount[tag] = (tagCount[tag] || 0) + 1;
+                    });
+                }
             });
 
             const allOtherUsers = await User.find({ _id: { $nin: excludedIds } }).select('_id');
             const userIdList = allOtherUsers.map(u => u._id.toString());
 
             const zsetKey = `suggestions:zset:${userId}`;
-            await redis.del(zsetKey); // clear old suggestions
+            await redisAdapterSingleton.del(zsetKey); // clear old suggestions
 
             for (const otherUserId of userIdList) {
                 const posts = await Posts.find({ author: otherUserId }).select('tags');
                 let tagScore = 0;
                 posts.forEach(post => {
-                    post.tags.forEach(tag => {
-                        tagScore += tagCount[tag] || 0;
-                    });
+                    if (post.tags) {
+                        post.tags.forEach(tag => {
+                            tagScore += tagCount[tag] || 0;
+                        });
+                    }
                 });
 
                 const mutualScore = mutualMap.get(otherUserId) || 0;
                 const finalScore = mutualScore * 10 + tagScore;
 
                 if (finalScore > 0) {
-                    await redis.zadd(zsetKey, finalScore, otherUserId);
+                    await redisAdapterSingleton.zAdd(zsetKey, finalScore, otherUserId);
                 }
             }
 
-            await redis.expire(zsetKey, 300); // cache ZSET 5 phút
+            await redisAdapterSingleton.expire(zsetKey, 300); // cache ZSET 5 phút
             console.log(`Refreshed suggestions for user: ${userId}`);
         }
     } catch (err) {

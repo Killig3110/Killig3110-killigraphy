@@ -237,7 +237,10 @@ export const updatePost = async (postId: string, data: PostPayload): Promise<Pos
     formData.append("caption", data.caption);
     if (data.location) formData.append("location", data.location);
     if (data.tags) formData.append("tags", data.tags);
-    if (data.image) formData.append("image", data.image);
+
+    if (data.image && data.image.size > 0) {
+        formData.append("image", data.image);
+    }
 
     const res = await API.patch<Post>(`/posts/${postId}`, formData);
     return res.data;

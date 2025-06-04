@@ -1,30 +1,9 @@
 import Posts from "../models/Posts";
+import { CreatePostResponse, PostDocument } from "../types";
 
-export const createPost = async ({
-    creator,
-    caption,
-    location,
-    tags,
-    imageId,
-    imageURL,
-}: {
-    creator: string;
-    caption: string;
-    location: string;
-    tags: string[];
-    imageId: string;
-    imageURL: string;
-}) => {
-    return await Posts.create({
-        creator,
-        caption,
-        location,
-        tags,
-        imageId,
-        imageURL,
-    });
-};
-
+export const createPost = async (postData: Partial<PostDocument>) => {
+    return await Posts.create(postData);
+}
 
 export const findPostById = async (postId: string) => {
     return await Posts.findById(postId).populate("creator");
@@ -49,7 +28,9 @@ export const findAllTagsAndLocations = async () => {
     const locationSet = new Set<string>();
 
     posts.forEach((post) => {
-        post.tags.forEach((tag) => tagSet.add(tag));
+        if (post.tags) {
+            post.tags.forEach((tag) => tagSet.add(tag));
+        }
         if (post.location) locationSet.add(post.location);
     });
 

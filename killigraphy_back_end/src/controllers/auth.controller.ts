@@ -1,7 +1,14 @@
 import { Request, Response } from 'express';
-import * as saveService from '../services/save.service';
-import * as authService from '../services/auth.service';
 import { AuthenticatedRequest } from '../types/index';
+import { AuthService } from '../services/auth.service';
+import { UserFactory } from '../factories/UserFactory/UserFactory';
+import RedisClient from '../config/redis';
+import { RedisAdapter } from '../utils/adapters/RedisAdapter/RedisAdapter';
+
+const userFactory = new UserFactory();
+const redisAdapter = new RedisAdapter();
+
+const authService = new AuthService(userFactory, redisAdapter);
 
 export const register = async (req: Request, res: Response) => {
     try {

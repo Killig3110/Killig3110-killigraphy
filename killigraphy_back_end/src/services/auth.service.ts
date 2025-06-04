@@ -1,70 +1,61 @@
+// src/services/AuthService.ts
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
-import crypto from 'crypto';
 import * as userRepo from '../repositories/user.repository';
-import redis from '../config/redis';
 import { sendEmail } from '../utils/sendEmail';
+import { RegisterUserInput, LoginUserInput } from '../types/index';
+import { IUserFactory } from '../factories/UserFactory/IUserFactory';
+import { IRedisAdapter } from '../utils/adapters/RedisAdapter/IRedisAdapter';
 
-interface RegisterUserInput {
-    name: string;
-    username: string;
-    email: string;
-    password: string;
-}
+export class AuthService {
+    constructor(
+        private userFactory: IUserFactory,
+        private redisClient: IRedisAdapter
+    ) { }
 
-interface LoginUserInput {
-    email: string;
-    password: string;
-}
+    async registerUser({ name, username, email, password }: RegisterUserInput) {
+        const existing = await userRepo.findByEmail(email);
+        if (existing) throw new Error('Email already exists');
 
-export const registerUser = async ({ name, username, email, password }: RegisterUserInput) => {
-    const existing = await userRepo.findByEmail(email);
-    if (existing) throw new Error('Email already exists');
-
-    const hashed = await bcrypt.hash(password, 10);
-    return await userRepo.createUser({
-        name,
-        username,
-        email,
-        password: hashed,
-        accountId: crypto.randomUUID(),
-    });
-};
-
-export const loginUser = async ({ email, password }: LoginUserInput) => {
-    const user = await userRepo.findByEmailWithPassword(email);
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-        throw new Error('Invalid credentials');
+        const userData = await this.userFactory.create({ name, username, email, password });
+        return await userRepo.createUser(userData);
     }
 
-    const secret = process.env.JWT_SECRET!;
-    const token = await new SignJWT({ id: user._id })
-        .setProtectedHeader({ alg: 'HS256' })
-        .setExpirationTime('7d')
-        .sign(new TextEncoder().encode(secret));
+    async loginUser({ email, password }: LoginUserInput) {
+        const user = await userRepo.findByEmailWithPassword(email);
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            throw new Error('Invalid credentials');
+        }
 
-    const { password: _, ...userData } = user.toObject();
-    return { user: userData, token };
-};
+        const secret = process.env.JWT_SECRET!;
+        const token = await new SignJWT({ id: user._id })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setExpirationTime('7d')
+            .sign(new TextEncoder().encode(secret));
 
-export const getCurrentUser = async (userId: string) => {
-    const user = await userRepo.findUserById(userId);
-    if (!user) throw new Error('User not found');
-    const { password: _, ...data } = user.toObject();
-    return data;
-};
-
-export const sendOtp = async (email: string) => {
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    await redis.set(`otp:${email}`, otp, 'EX', 300);
-    await sendEmail(email, 'Your OTP Code', `Your code is: ${otp}`);
-};
-
-export const verifyOtp = async (email: string, otp: string) => {
-    const stored = await redis.get(`otp:${email}`);
-    if (!stored || stored !== otp) {
-        throw new Error('Invalid or expired OTP');
+        const { password: _, ...userData } = user.toObject();
+        return { user: userData, token };
     }
-    await redis.del(`otp:${email}`);
-    return { verified: true };
-};
+
+    async getCurrentUser(userId: string) {
+        const user = await userRepo.findUserById(userId);
+        if (!user) throw new Error('User not found');
+        const { password: _, ...data } = user.toObject();
+        return data;
+    }
+
+    async sendOtp(email: string) {
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        await this.redisClient.setEx(`otp:${email}`, 300, otp);
+        await sendEmail(email, 'Your OTP Code', `Your code is: ${otp}`);
+    }
+
+    async verifyOtp(email: string, otp: string) {
+        const stored = await this.redisClient.get(`otp:${email}`);
+        if (!stored || stored !== otp) {
+            throw new Error('Invalid or expired OTP');
+        }
+        await this.redisClient.del(`otp:${email}`);
+        return { verified: true };
+    }
+}

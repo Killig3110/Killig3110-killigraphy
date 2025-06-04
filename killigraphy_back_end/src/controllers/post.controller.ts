@@ -1,7 +1,23 @@
 import e, { Request, Response } from "express";
-import * as postService from "../services/post.service";
-import * as feedService from "../services/feed.service";
 import { AuthenticatedRequest } from '../types/index';
+import { PostService } from "../services/post.service";
+import { PostFactory } from "../factories/PostFactory/PostFactory";
+import { FeedService } from "../services/feed.service";
+import { PersonalizedFeedStrategy } from "../strategies/FeedStrategy/PersonalizedFeedStrategy";
+import { RedisAdapter } from "../utils/adapters/RedisAdapter/RedisAdapter";
+import { ImageKitAdapter } from "../utils/adapters/ImageKitAdapter/ImageKitAdapter";
+import { PostUpdateStrategy } from "../strategies/UpdateStrategy/PostUpdateStrategy";
+import { imageKitAdapterSingleton } from "../utils/singleton/ImageKitAdapterSingleton";
+
+const postUpdateStrategy = new PostUpdateStrategy(imageKitAdapterSingleton);
+
+const postService = new PostService(
+    new PostFactory(),
+    new FeedService(new PersonalizedFeedStrategy()),
+    new ImageKitAdapter(),
+    new RedisAdapter(),
+    postUpdateStrategy
+);
 
 export const createPost = async (req: AuthenticatedRequest, res: Response) => {
     try {
@@ -24,6 +40,7 @@ export const createPost = async (req: AuthenticatedRequest, res: Response) => {
 export const updatePost = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { caption, location, tags } = req.body;
+        
         const image = req.file;
 
         const updated = await postService.updatePost({
@@ -31,7 +48,7 @@ export const updatePost = async (req: AuthenticatedRequest, res: Response) => {
             caption,
             location,
             tags,
-            image,
+            image: image && image.buffer ? image : undefined,
             userId: req.userId!,
         });
 

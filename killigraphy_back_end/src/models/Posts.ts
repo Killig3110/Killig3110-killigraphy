@@ -1,7 +1,8 @@
 // src/models/Posts.ts
-import mongoose from 'mongoose';
+import mongoose, { Model } from 'mongoose';
+import { PostDocument } from '../types';
 
-const postSchema = new mongoose.Schema({
+const postSchema = new mongoose.Schema<PostDocument>({
     creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
     caption: { type: String },
@@ -15,4 +16,5 @@ const postSchema = new mongoose.Schema({
     timestamps: true
 });
 
-export default mongoose.model('Post', postSchema);
+const Post: Model<PostDocument> = mongoose.model<PostDocument>('Post', postSchema);
+export default Post;

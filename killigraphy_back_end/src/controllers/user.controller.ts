@@ -1,7 +1,17 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../types/index';
-import * as userService from '../services/user.service';
 import mongoose from 'mongoose';
+import { UserService } from '../services/user.service';
+import { ImageKitAdapter } from '../utils/adapters/ImageKitAdapter/ImageKitAdapter';
+import { RedisAdapter } from '../utils/adapters/RedisAdapter/RedisAdapter';
+import { UserUpdateStrategy } from '../strategies/UpdateStrategy/UserUpdateStrategy';
+import { imageKitAdapterSingleton } from '../utils/singleton/ImageKitAdapterSingleton';
+
+const userService = new UserService(
+    new UserUpdateStrategy(imageKitAdapterSingleton),
+    new ImageKitAdapter(),
+    new RedisAdapter(),
+);
 
 export const getPaginatedUsers = async (req: AuthenticatedRequest, res: Response) => {
     try {
@@ -83,7 +93,7 @@ export const updateUser = async (req: AuthenticatedRequest, res: Response) => {
             username,
             name,
             bio,
-            file,
+            file: file && file.buffer ? file : undefined,
         });
 
         res.status(200).json(updatedUser);

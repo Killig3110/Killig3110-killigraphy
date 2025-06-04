@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
-import * as commentService from "../services/comment.service";
 import { AuthenticatedRequest } from '../types/index';
+import { CommentService } from "../services/comment.service";
+import { CommentFactory } from "../factories/CommentFactory/CommentFactory";
+
+const commentService = new CommentService(new CommentFactory());
+
 
 export const createComment = async (req: AuthenticatedRequest, res: Response) => {
     try {

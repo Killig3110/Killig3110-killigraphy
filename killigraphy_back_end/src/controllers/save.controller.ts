@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
-import { saveService } from '../services/save.service';
 import { AuthenticatedRequest } from '../types/index';
+import { SaveService } from '../services/save.service';
+import { SaveFactory } from '../factories/SaveFactory/SaveFactory';
+
+const saveService = new SaveService(new SaveFactory());
 
 export const savePost = async (req: AuthenticatedRequest, res: Response) => {
     try {
@@ -30,7 +33,7 @@ export const unsavePost = async (req: AuthenticatedRequest, res: Response) => {
 
 export const getSavedPosts = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const posts = await saveService.getSavedPosts(req.userId!);
+        const posts = await saveService.getSavedPosts(req.userId!);``
         if (!posts.length) {
             return res.status(404).json({ message: 'No saved posts found' });
         }

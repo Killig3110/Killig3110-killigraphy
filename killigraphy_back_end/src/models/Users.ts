@@ -1,8 +1,8 @@
 // src/models/User.ts
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+import { UserDocument } from '../types';
 
-const userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema<UserDocument>({
     name: { type: String },
     username: { type: String },
     accountId: { type: String, required: true },
@@ -19,4 +19,5 @@ const userSchema = new mongoose.Schema({
     timestamps: true
 });
 
-export default mongoose.model('User', userSchema,);
+const User = mongoose.model<UserDocument>('User', userSchema);
+export default User;

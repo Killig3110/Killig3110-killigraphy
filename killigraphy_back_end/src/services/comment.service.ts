@@ -1,30 +1,39 @@
-import * as commentRepo from "../repositories/comment.repository";
+// src/services/CommentService.ts
+import { ICommentFactory } from '../factories/CommentFactory/ICommentFactory';
+import * as commentRepo from '../repositories/comment.repository';
 
-export const addComment = async (content: string, postId: string, userId: string, parentId?: string) => {
-    if (!content || !postId) throw new Error("Missing required fields");
+export class CommentService {
+    constructor(private commentFactory: ICommentFactory) { }
 
-    const comment = await commentRepo.createComment({
-        content,
-        post: postId,
-        user: userId,
-        parent: parentId || null,
-    });
+    async addComment(content: string, postId: string, userId: string, parentId?: string) {
+        if (!content || !postId) throw new Error('Missing required fields');
 
-    return await comment.populate("user", "name imageUrl");
-};
+        const commentData = this.commentFactory.create({
+            content,
+            postId,
+            userId,
+            parentId,
+        });
 
-export const getPostComments = async (postId: string) => {
-    return await commentRepo.getCommentsByPostId(postId);
-};
+        const comment = await commentRepo.createComment(commentData);
+        if (!comment) throw new Error('Failed to create comment');
 
-export const deleteComment = async (commentId: string, userId: string) => {
-    const comment = await commentRepo.findCommentById(commentId);
-    if (!comment) throw new Error("Comment not found");
-
-    const postCreatorId = (comment.post as any).creator;
-    if (!postCreatorId.equals(userId)) {
-        throw new Error("Unauthorized");
+        return await comment.populate('user', 'name imageUrl');
     }
 
-    await commentRepo.deleteCommentById(commentId);
-};
+    async getPostComments(postId: string) {
+        return await commentRepo.getCommentsByPostId(postId);
+    }
+
+    async deleteComment(commentId: string, userId: string) {
+        const comment = await commentRepo.findCommentById(commentId);
+        if (!comment) throw new Error('Comment not found');
+
+        const postCreatorId = (comment.post as any).creator;
+        if (!postCreatorId.equals(userId)) {
+            throw new Error('Unauthorized');
+        }
+
+        await commentRepo.deleteCommentById(commentId);
+    }
+}
