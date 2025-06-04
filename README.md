@@ -153,4 +153,13 @@ npm run dev
 - Safe file uploads (MIME type checking)
 - Redis caching for optimized recommendation queries
 
+## 📚 About the Author
 
+Hi, I'm [Killig3110]! 👋
+
+- 🌱 I’m passionate about full-stack development, especially in building scalable social media platforms.
+- 🛠️ Main Tech Stack: Node.js, React, TypeScript, MongoDB, Redis, Docker.
+- 📫 Reach me at: your.email@example.com
+- 🔗 Connect with me: [LinkedIn]([https://linkedin.com/in/your-profile](https://www.linkedin.com/in/killig3110/)) | [GitHub]([https://github.com/your-username](https://github.com/Killig3110))
+
+Feel free to reach out if you have any questions or want to collaborate!
