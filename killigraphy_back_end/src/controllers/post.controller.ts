@@ -40,7 +40,7 @@ export const createPost = async (req: AuthenticatedRequest, res: Response) => {
 export const updatePost = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { caption, location, tags } = req.body;
-        
+
         const image = req.file;
 
         const updated = await postService.updatePost({
@@ -112,10 +112,21 @@ export const handleGetPostById = async (req: Request, res: Response) => {
 
 export const handleGetPostsByList = async (req: Request, res: Response) => {
     try {
-        const { postIds } = req.query;
-        if (!postIds || !Array.isArray(postIds)) {
+        let { postIds } = req.query;
+
+        if (!postIds) {
+            return res.status(400).json({ message: "Missing post IDs" });
+        }
+
+        // Nếu postIds là string thì split nó ra array
+        if (typeof postIds === "string") {
+            postIds = postIds.split(",");
+        }
+
+        if (!Array.isArray(postIds) || postIds.length === 0) {
             return res.status(400).json({ message: "Invalid post IDs" });
         }
+
         const posts = await postService.getPostsByList(postIds as string[]);
         res.json(posts);
     } catch (err) {

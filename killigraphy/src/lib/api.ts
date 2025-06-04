@@ -292,9 +292,9 @@ export const getUserPosts = async (userId: string): Promise<Post[]> => {
 };
 
 export const getListPosts = async (postIds: string[]): Promise<Post[]> => {
-    const res = await API.post<Post[]>("/posts/list", { postIds });
+    const res = await API.get<Post[]>("/posts/list", { params: { postIds: postIds.join(",") } });
     return res.data;
-}
+};
 
 export const fetchPaginatedPosts = async (page = 1): Promise<PaginatedPostResponse> => {
     const res = await API.get<PaginatedPostResponse>(`/posts`, {

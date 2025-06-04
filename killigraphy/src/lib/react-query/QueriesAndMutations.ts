@@ -231,7 +231,7 @@ export const useGetListPostsMutation = (listPosts: string[]) =>
     useQuery({
         queryKey: [QUERY_KEYS.GET_POST_LIST, listPosts],
         queryFn: () => getListPosts(listPosts),
-        enabled: !!listPosts.length,
+        enabled: Array.isArray(listPosts) && listPosts.length > 0, // An toàn hơn
     });
 
 // =========================

@@ -6,15 +6,15 @@ import { upload } from "../middleware/upload";
 const router = express.Router();
 
 router.post("/", requireAuth, upload.single("image"), postController.createPost);
-router.patch("/:id", requireAuth, upload.single("image"), postController.updatePost);
+router.get("/", requireAuth, postController.handleGetPaginatedPosts);
 router.get("/user/:userId", postController.getPostsByUserId);
-router.delete("/:id", requireAuth, postController.handleDeletePost);
 router.get("/meta/trend", postController.handleGetMetaTrend);
 router.get("/search", postController.handleSearchPosts);
-router.get("/:id", postController.handleGetPostById);
 router.get("/list", postController.handleGetPostsByList);
-router.patch("/:id/like", requireAuth, postController.handleToggleLikePost);
 router.get("/feed/personalized", requireAuth, postController.handGetPersonalizedFeed);
-router.get("/", requireAuth, postController.handleGetPaginatedPosts);
+router.patch("/:id", requireAuth, upload.single("image"), postController.updatePost);
+router.delete("/:id", requireAuth, postController.handleDeletePost);
+router.get("/:id", postController.handleGetPostById);
+router.patch("/:id/like", requireAuth, postController.handleToggleLikePost);
 
 export default router;

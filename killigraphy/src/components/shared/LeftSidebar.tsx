@@ -22,7 +22,7 @@ const LeftSideBar = () => {
     };
 
     return (
-        <nav className='leftsidebar'>
+        <nav className="flex flex-col justify-between h-screen p-4 w-60 lg:w-72">
             <div className='flex flex-col gap-11'>
                 <Link to='/' className='flex gap-3 justify-center items-center'>
                     <img
