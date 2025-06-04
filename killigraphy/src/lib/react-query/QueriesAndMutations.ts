@@ -121,6 +121,7 @@ export const useUpdateUserMutation = () => {
         mutationFn: ({ userId, ...rest }: UpdateProfilePayload) =>
             updateUser(userId, rest as UpdateProfilePayload),
         onSuccess: (data) => {
+            // InvalidateQueries is used to refetch the user data after update
             queryClient.invalidateQueries({
                 queryKey: [QUERY_KEYS.GET_USER_BY_ID, data._id],
             });
