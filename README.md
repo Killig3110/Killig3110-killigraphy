@@ -1,5 +1,5 @@
 
-# Killigraphy
+# Killigraphy (This project is for education only)
 
 **Killigraphy** is a modern social networking platform that allows users to upload, share, comment, and save posts in image format with interactive features such as following, liking, commenting, and saving favorite posts.
 
