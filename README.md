@@ -37,7 +37,6 @@
 ### Deployment
 
 - **Docker**, **Docker Compose** for containerization
-- **Nginx** as reverse proxy for frontend/backend
 
 ## 📁 Project Structure
 
