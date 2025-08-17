@@ -83,7 +83,7 @@ cd killigraphy
 1. **Create `.env` file for backend (`killigraphy_back_end/.env`)**
 
 ```env
-PORT=5000
+PORT=8085
 MONGO_URI=your_mongo_db_uri
 REDIS_URL=your_redis_url
 JWT_SECRET=your_jwt_secret
@@ -101,7 +101,7 @@ docker-compose up --build
 ```
 
 - Frontend: `http://localhost`
-- Backend: `http://localhost:5000`
+- Backend: `http://localhost:8085`
 
 ### Run locally (without Docker)
 

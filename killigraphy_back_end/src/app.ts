@@ -12,7 +12,6 @@ import commentRouter from './routes/comments';
 import usersRouter from './routes/users';
 import chatsRouter from './routes/chats';
 import messageRouter from './routes/messages';
-import { initSocket } from "./socket";
 import cron from 'node-cron';
 import { refreshSuggestionsForAllUsers } from './cron/refreshSuggestions';
 
@@ -20,12 +19,8 @@ const allowedOrigins = ['http://localhost', 'http://localhost:80', 'http://local
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8085;
 const server = http.createServer(app);
-
-// Initialize socket.io
-const io = initSocket(server);
-app.set("io", io);
 
 // Middleware
 app.use(cors({

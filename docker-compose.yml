@@ -9,7 +9,7 @@ services:
     ports:
       - "80:80"
     environment:
-      - VITE_API_URL=http://localhost:5000/api
+      - VITE_API_URL=http://localhost:8085/api
     depends_on:
       - backend
     networks:
@@ -23,7 +23,7 @@ services:
       - ./killigraphy_back_end:/app
       - /app/node_modules
     ports:
-      - "5000:5000"
+      - "8085:8085"
     depends_on:
       - mongodb
       - redis

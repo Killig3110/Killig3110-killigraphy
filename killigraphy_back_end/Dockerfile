@@ -10,6 +10,6 @@ COPY . .
 # Cài nodemon global (cho chắc nếu dùng docker run thủ công)
 RUN npm install -g nodemon
 
-EXPOSE 5000
+EXPOSE 8085
 
 CMD ["npm", "run", "dev"]
