@@ -16,14 +16,14 @@ export class AuthService {
     async registerUser({ name, username, email, password }: RegisterUserInput) {
         const existing = await userRepo.findByEmail(email);
         if (existing) throw new Error('Email already exists');
-
         const userData = await this.userFactory.create({ name, username, email, password });
         return await userRepo.createUser(userData);
     }
 
     async loginUser({ email, password }: LoginUserInput) {
         const user = await userRepo.findByEmailWithPassword(email);
-        if (!user || !(await bcrypt.compare(password, user.password))) {
+        if (!user) throw new Error('User not found');
+        if (!(await bcrypt.compare(password, user.password))) {
             throw new Error('Invalid credentials');
         }
 

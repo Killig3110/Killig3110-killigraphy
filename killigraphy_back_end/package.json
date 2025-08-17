@@ -6,7 +6,9 @@
         "dev": "ts-node-dev src/app.ts"
     },
     "dependencies": {
+        "@faker-js/faker": "^9.9.0",
         "@types/imagekit": "^3.1.5",
+        "@types/jsonwebtoken": "^9.0.10",
         "@types/multer": "^1.4.12",
         "bcryptjs": "^2.4.3",
         "cookie-parser": "^1.4.7",
@@ -16,6 +18,7 @@
         "imagekit": "^6.0.0",
         "ioredis": "^5.6.1",
         "jose": "^5.1.1",
+        "jsonwebtoken": "^9.0.2",
         "mongoose": "^7.0.3",
         "multer": "^2.0.0",
         "node-cron": "^4.0.7",

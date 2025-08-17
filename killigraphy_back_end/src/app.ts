@@ -10,10 +10,9 @@ import postsRouter from './routes/posts';
 import savesRouter from './routes/saves';
 import commentRouter from './routes/comments';
 import usersRouter from './routes/users';
-import chatsRouter from './routes/chats';
-import messageRouter from './routes/messages';
 import cron from 'node-cron';
 import { refreshSuggestionsForAllUsers } from './cron/refreshSuggestions';
+import { seed } from './utils/seed';
 
 const allowedOrigins = ['http://localhost', 'http://localhost:80', 'http://localhost:5173'];
 dotenv.config();
@@ -47,13 +46,14 @@ app.use('/api/posts', postsRouter);
 app.use('/api/saves', savesRouter);
 app.use('/api/comments', commentRouter);
 app.use('/api/users', usersRouter);
-app.use('/api/chats', chatsRouter);
-app.use('/api/messages', messageRouter);
 
 // MongoDB connect
 mongoose.connect(process.env.MONGODB_URI!)
-    .then(() => {
+    .then(async () => {
         console.log('MongoDB connected');
+
+        // Seed the database if` needed
+        await seed();
 
         // Only call server.listen once here
         server.listen(PORT, () => {
